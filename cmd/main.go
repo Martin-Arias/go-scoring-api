@@ -7,7 +7,7 @@ import (
 	"github.com/Martin-Arias/go-scoring-api/internal/handler"
 	"github.com/Martin-Arias/go-scoring-api/internal/middleware"
 	"github.com/Martin-Arias/go-scoring-api/internal/repository"
-	"github.com/gin-gonic/gin" // Import the library
+	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
