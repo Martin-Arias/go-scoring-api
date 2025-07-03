@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/Martin-Arias/go-scoring-api/internal/handler"
+	"github.com/Martin-Arias/go-scoring-api/internal/middleware"
 	"github.com/Martin-Arias/go-scoring-api/internal/repository"
 	"github.com/gin-gonic/gin" // Import the library
 	"gorm.io/gorm"
@@ -14,15 +15,20 @@ var db *gorm.DB
 
 func setupRouter() *gin.Engine {
 	r := gin.Default()
-
+	authHandler := handler.NewAuthHandler(db)
 	gameHandler := handler.NewGameHandler(db)
-	//scoreHandler := handler.NewScoreHandler(db)
 
-	// Admin routes
-	r.POST("/games", gameHandler.Create)
-	r.GET("/games", gameHandler.List)
+	// Public routes
+	auth := r.Group("/auth")
+	auth.POST("/register", authHandler.Register)
+	auth.POST("/login", authHandler.Login)
 
-	//r.POST("/games/score", scoreHandler.Submit)
+	// Protected routes
+	api := r.Group("/api")
+	api.Use(middleware.AuthMiddleware())
+
+	api.POST("/games", gameHandler.Create)
+	api.GET("/games", gameHandler.List)
 
 	return r
 }
