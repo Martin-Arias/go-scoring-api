@@ -1,19 +1,89 @@
 package handler
 
 import (
-	"gorm.io/gorm"
+	"net/http"
+
+	"github.com/Martin-Arias/go-scoring-api/internal/model"
+	"github.com/Martin-Arias/go-scoring-api/internal/repository"
+	"github.com/gin-gonic/gin"
 )
 
 type SubmitScoreRequest struct {
-	PlayerID string `json:"player_id" binding:"required"`
-	GameID   string `json:"game_id" binding:"required"`
-	Points   int    `json:"points" binding:"required,gte=0"`
+	PlayerID uint `json:"player_id" binding:"required"`
+	GameID   uint `json:"game_id" binding:"required"`
+	Points   int  `json:"points" binding:"required,gte=0"`
 }
 
 type ScoreHandler struct {
-	db *gorm.DB
+	sr repository.ScoreRepository
+	ur repository.UserRepository
+	gr repository.GameRepository
 }
 
-func NewScoreHandler(db *gorm.DB) *ScoreHandler {
-	return &ScoreHandler{db: db}
+func NewScoreHandler(sr repository.ScoreRepository, ur repository.UserRepository, gr repository.GameRepository) *ScoreHandler {
+	return &ScoreHandler{sr: sr, ur: ur, gr: gr}
+}
+
+func (h *ScoreHandler) Submit(c *gin.Context) {
+	// TODO: Check in context if user is admin or player
+	// if user is admin, allow to submit scores for any player
+
+	var req SubmitScoreRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+		return
+	}
+
+	// Check if user exists
+	usr, err := h.ur.GetUserByID(req.PlayerID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	} else if usr == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "player not found"})
+		return
+	}
+
+	// Admin users aren't allowed to play :'(
+	if usr.IsAdmin {
+		c.JSON(http.StatusNotFound, gin.H{"error": "player not found"})
+		return
+	}
+
+	// Check if game exists
+	game, err := h.gr.GetGameByID(req.GameID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	} else if game == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "game not found"})
+		return
+	}
+
+	score := model.Score{
+		PlayerID: req.PlayerID,
+		GameID:   req.GameID,
+		Points:   req.Points,
+	}
+	// Check if score points are less than new score points
+	existingScore, err := h.sr.GetScore(req.PlayerID, req.GameID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+	if existingScore != nil && existingScore.Points >= req.Points {
+		c.JSON(http.StatusConflict, gin.H{"error": "score must be higher than existing score"})
+		return
+	}
+
+	if existingScore != nil {
+		score.ID = existingScore.ID // If score exists, use its ID to update
+	}
+
+	if err := h.sr.SubmitScore(score); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to submit score"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "score submitted successfully"})
 }

@@ -14,10 +14,15 @@ import (
 var db *gorm.DB
 
 func setupRouter() *gin.Engine {
+
+	sr := repository.NewScoreRepository(db)
+	ur := repository.NewUserRepository(db)
+	gr := repository.NewGameRepository(db)
+
 	r := gin.Default()
 	authHandler := handler.NewAuthHandler(db)
 	gameHandler := handler.NewGameHandler(db)
-
+	scoreHandler := handler.NewScoreHandler(sr, ur, gr)
 	// Public routes
 	auth := r.Group("/auth")
 	auth.POST("/register", authHandler.Register)
@@ -29,6 +34,7 @@ func setupRouter() *gin.Engine {
 
 	api.POST("/games", gameHandler.Create)
 	api.GET("/games", gameHandler.List)
+	api.PUT("/scores", scoreHandler.Submit)
 
 	return r
 }
