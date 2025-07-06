@@ -1,6 +1,7 @@
 package model
 
 type Score struct {
+	ID       uint   `gorm:"primaryKey"`
 	PlayerID string `gorm:"primaryKey"`
 	GameID   string `gorm:"primaryKey"`
 	Points   int    `gorm:"not null"`
@@ -11,7 +12,7 @@ type Score struct {
 }
 
 type Game struct {
-	ID   string `gorm:"primaryKey"`
+	ID   uint   `gorm:"primaryKey"`
 	Name string `gorm:"uniqueIndex;not null"`
 
 	//FK

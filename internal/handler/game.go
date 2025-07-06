@@ -6,7 +6,6 @@ import (
 	"github.com/Martin-Arias/go-scoring-api/internal/dto"
 	"github.com/Martin-Arias/go-scoring-api/internal/model"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"gorm.io/gorm"
 )
@@ -30,7 +29,6 @@ func (h *GameHandler) Create(c *gin.Context) {
 	}
 
 	game := model.Game{
-		ID:   uuid.New().String(),
 		Name: req.Name,
 	}
 
