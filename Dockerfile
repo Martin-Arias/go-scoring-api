@@ -1,28 +1,35 @@
-# Builder con Go oficial
+# Use the official Golang image as the base
 FROM golang:1.24-alpine AS builder
 
-# Instalar herramientas necesarias en etapa de build
-RUN apk add --no-cache git
+# Set environment variables
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
 
-WORKDIR /app
+# Set working directory inside the container
+WORKDIR /build
 
+# Copy go.mod and go.sum files for dependency installation
 COPY go.mod go.sum ./
+
+# Download dependencies
 RUN go mod download
 
+# Copy the entire application source
 COPY . .
 
-# Compilar binario estático
-RUN CGO_ENABLED=0 go build -o main ./cmd
+# Build the Go binary
+RUN go build -o /app ./cmd
 
-# Final image: Alpine
-FROM alpine:3.20
+# Final lightweight stage
+FROM alpine:3.21 AS final
 
-WORKDIR /app
-
-# Copiar binario desde build
-COPY --from=builder /app/main .
+# Copy the compiled binary from the builder stage
+COPY --from=builder /app /bin/app
 COPY .env .
 
-EXPOSE 8080
+# Expose the application's port
+EXPOSE 8000
 
-ENTRYPOINT ["./main"]
+# Run the application
+CMD ["bin/app"]

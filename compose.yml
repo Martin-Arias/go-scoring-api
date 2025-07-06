@@ -8,8 +8,12 @@ services:
       - "8080:8080"
     env_file: .env
     depends_on:
-      - db
-    restart: unless-stopped
+      db:
+        condition: service_healthy
+    develop:
+      watch:
+        - path: .
+          action: rebuild
 
   db:
     image: postgres:latest
@@ -19,10 +23,14 @@ services:
       POSTGRES_DB: scoring_db
     ports:
       - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 5
     volumes:
       - /var/lib/postgresql/data
       ##- pgdata:/var/lib/postgresql/data
-    restart: unless-stopped
 
 #volumes:
   #pgdata:
