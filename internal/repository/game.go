@@ -7,7 +7,7 @@ import (
 
 type GameRepository interface {
 	CreateGame(name string) (uint, error)
-	ListGames() ([]model.Game, error)
+	ListGames() (*[]model.Game, error)
 	GetGameByID(id uint) (*model.Game, error)
 }
 
@@ -26,20 +26,17 @@ func (r *gameRepository) CreateGame(name string) (uint, error) {
 	}
 	return game.ID, nil
 }
-func (r *gameRepository) ListGames() ([]model.Game, error) {
+func (r *gameRepository) ListGames() (*[]model.Game, error) {
 	var games []model.Game
 	if err := r.db.Find(&games).Error; err != nil {
 		return nil, err
 	}
-	return games, nil
+	return &games, nil
 }
 
 func (r *gameRepository) GetGameByID(id uint) (*model.Game, error) {
 	var game model.Game
 	if err := r.db.First(&game, id).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, nil
-		}
 		return nil, err
 	}
 	return &game, nil
