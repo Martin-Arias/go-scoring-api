@@ -7,6 +7,7 @@ import (
 	"github.com/Martin-Arias/go-scoring-api/internal/model"
 	"github.com/Martin-Arias/go-scoring-api/internal/repository"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type SubmitScoreRequest struct {
@@ -38,10 +39,11 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 	// Check if user exists
 	usr, err := h.ur.GetUserByID(req.PlayerID)
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "player not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
-		return
-	} else if usr == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "player not found"})
 		return
 	}
 
@@ -52,12 +54,13 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 	}
 
 	// Check if game exists
-	game, err := h.gr.GetGameByID(req.GameID)
+	_, err = h.gr.GetGameByID(req.GameID)
 	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "game not found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
-		return
-	} else if game == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "game not found"})
 		return
 	}
 
@@ -66,12 +69,14 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 		GameID:   req.GameID,
 		Points:   req.Points,
 	}
-	// Check if score points are less than new score points
+
 	existingScore, err := h.sr.GetScore(req.PlayerID, req.GameID)
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
+
+	// Check if score points are less than new score points
 	if existingScore != nil && existingScore.Points >= req.Points {
 		c.JSON(http.StatusConflict, gin.H{"error": "score must be higher than existing score"})
 		return
@@ -107,6 +112,11 @@ func (h *ScoreHandler) GetScoresByGameID(c *gin.Context) {
 		return
 	}
 
+	if len(scores) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "no scores found for this game"})
+		return
+	}
+
 	c.JSON(http.StatusOK, scores)
 
 }
@@ -126,6 +136,11 @@ func (h *ScoreHandler) GetScoresByPlayerID(c *gin.Context) {
 	scores, err := h.sr.GetScoresByPlayerID(uint(gameID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	if len(scores) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "no scores found for this player"})
 		return
 	}
 

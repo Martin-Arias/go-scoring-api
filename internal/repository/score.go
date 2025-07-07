@@ -43,6 +43,7 @@ func (r *scoreRepository) GetScoresByGameID(gameID uint) ([]dto.PlayerScoreDTO, 
 		Joins("JOIN users ON users.id = scores.player_id").
 		Joins("JOIN games ON games.id = scores.game_id").
 		Where("scores.game_id = ?", gameID).
+		Order("scores.points DESC").
 		Scan(&results).Error; err != nil {
 		return nil, err
 	}
