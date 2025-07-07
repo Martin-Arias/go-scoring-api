@@ -1,6 +1,6 @@
 package dto
 
-type GameResponse struct {
+type GameDTO struct {
 	ID   uint   `json:"id"`
-	Name string `json:"name"`
+	Name string `json:"name,omitempty"`
 }
