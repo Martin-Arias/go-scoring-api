@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Martin-Arias/go-scoring-api/internal/model"
+	"github.com/Martin-Arias/go-scoring-api/internal/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
@@ -14,33 +15,32 @@ import (
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
-type RegisterRequest struct {
+type AuthRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required,min=6"`
 }
 
-type LoginRequest struct {
-	Username string `json:"username" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
 type AuthHandler struct {
-	db *gorm.DB
+	ur repository.UserRepository
 }
 
-func NewAuthHandler(db *gorm.DB) *AuthHandler {
-	return &AuthHandler{db: db}
+func NewAuthHandler(ur repository.UserRepository) *AuthHandler {
+	return &AuthHandler{ur: ur}
 }
+
 func (h *AuthHandler) Register(c *gin.Context) {
-	var req RegisterRequest
+	var req AuthRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
-	var existingUser model.User
-
-	if err := h.db.First(&existingUser, "username = ?", req.Username).Error; err == nil {
+	user, err := h.ur.GetUserByUsername(req.Username)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+	if user != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "username already exists"})
 		return
 	}
@@ -56,7 +56,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		PasswordHash: string(hash),
 	}
 
-	if err := h.db.Create(&newUser).Error; err != nil {
+	if err := h.ur.RegisterUser(&newUser).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
 		return
 	}
@@ -65,15 +65,20 @@ func (h *AuthHandler) Register(c *gin.Context) {
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
-	var req LoginRequest
+	var req AuthRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
-	var user model.User
-	if err := h.db.First(&user, "username = ?", req.Username).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
+	user, err := h.ur.GetUserByUsername(req.Username)
+
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
@@ -82,7 +87,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := GenerateToken(user)
+	token, err := GenerateToken(*user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return

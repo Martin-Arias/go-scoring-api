@@ -20,7 +20,7 @@ func setupRouter() *gin.Engine {
 	gr := repository.NewGameRepository(db)
 
 	r := gin.Default()
-	authHandler := handler.NewAuthHandler(db)
+	authHandler := handler.NewAuthHandler(ur)
 	gameHandler := handler.NewGameHandler(gr)
 	scoreHandler := handler.NewScoreHandler(sr, ur, gr)
 	// Public routes
