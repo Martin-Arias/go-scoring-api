@@ -46,7 +46,7 @@ func (h *GameHandler) List(c *gin.Context) {
 	}
 
 	var response []dto.GameDTO
-	for _, game := range games {
+	for _, game := range *games {
 		response = append(response, dto.GameDTO{ID: game.ID, Name: game.Name})
 	}
 
