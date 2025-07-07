@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/Martin-Arias/go-scoring-api/internal/model"
 	"github.com/Martin-Arias/go-scoring-api/internal/repository"
@@ -86,4 +87,48 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "score submitted successfully"})
+}
+func (h *ScoreHandler) GetScoresByGameID(c *gin.Context) {
+	gameIDStr := c.Query("game_id")
+	if gameIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid game ID"})
+		return
+	}
+
+	gameID, err := strconv.Atoi(gameIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid game ID"})
+		return
+	}
+
+	scores, err := h.sr.GetScoresByGameID(uint(gameID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, scores)
+
+}
+func (h *ScoreHandler) GetScoresByPlayerID(c *gin.Context) {
+	playerIDStr := c.Query("player_id")
+	if playerIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid player ID"})
+		return
+	}
+
+	gameID, err := strconv.Atoi(playerIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid player ID"})
+		return
+	}
+
+	scores, err := h.sr.GetScoresByPlayerID(uint(gameID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	c.JSON(http.StatusOK, scores)
+
 }

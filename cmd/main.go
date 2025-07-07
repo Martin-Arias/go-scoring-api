@@ -21,7 +21,7 @@ func setupRouter() *gin.Engine {
 
 	r := gin.Default()
 	authHandler := handler.NewAuthHandler(db)
-	gameHandler := handler.NewGameHandler(db)
+	gameHandler := handler.NewGameHandler(gr)
 	scoreHandler := handler.NewScoreHandler(sr, ur, gr)
 	// Public routes
 	auth := r.Group("/auth")
@@ -34,8 +34,10 @@ func setupRouter() *gin.Engine {
 
 	api.POST("/games", gameHandler.Create)
 	api.GET("/games", gameHandler.List)
-	api.PUT("/scores", scoreHandler.Submit)
 
+	api.PUT("/scores", scoreHandler.Submit)
+	api.GET("/scores/user", scoreHandler.GetScoresByPlayerID)
+	api.GET("/scores/game", scoreHandler.GetScoresByGameID)
 	return r
 }
 func init() {
