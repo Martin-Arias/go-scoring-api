@@ -27,7 +27,7 @@ func (h *GameHandler) Create(c *gin.Context) {
 		return
 	}
 
-	game_id, err := h.gr.CreateGame(req.Name)
+	game, err := h.gr.CreateGame(req.Name)
 
 	if err != nil {
 		log.Error().Err(err).Msg("error creating game")
@@ -35,8 +35,9 @@ func (h *GameHandler) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, dto.GameDTO{ID: game_id})
+	c.JSON(http.StatusCreated, dto.GameDTO{ID: game.ID, Name: game.Name})
 }
+
 func (h *GameHandler) List(c *gin.Context) {
 	games, err := h.gr.ListGames()
 	if err != nil {
