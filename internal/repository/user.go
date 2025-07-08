@@ -20,13 +20,19 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 func (r *userRepository) GetUserByUsername(username string) (*model.User, error) {
 	var user model.User
 	err := r.db.First(&user, "username = ?", username).Error
-	return &user, err
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (r *userRepository) GetUserByID(id uint) (*model.User, error) {
 	var user model.User
 	err := r.db.First(&user, "id = ?", id).Error
-	return &user, err
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 func (r *userRepository) RegisterUser(user *model.User) error {

@@ -9,6 +9,7 @@ import (
 	"github.com/Martin-Arias/go-scoring-api/internal/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -40,6 +41,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
+	log.Debug().Msgf("User found: %v", user)
 	if user != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "username already exists"})
 		return
@@ -56,7 +58,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		PasswordHash: string(hash),
 	}
 
-	if err := h.ur.RegisterUser(&newUser).Error; err != nil {
+	if err := h.ur.RegisterUser(&newUser); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
 		return
 	}
