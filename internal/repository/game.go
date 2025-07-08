@@ -22,17 +22,26 @@ func NewGameRepository(db *gorm.DB) GameRepository {
 func (r *gameRepository) CreateGame(name string) (*model.Game, error) {
 	game := model.Game{Name: name}
 	err := r.db.Create(&game).Error
-	return &game, err
+	if err != nil {
+		return nil, err
+	}
+	return &game, nil
 }
 
 func (r *gameRepository) ListGames() (*[]model.Game, error) {
 	var games []model.Game
 	err := r.db.Find(&games).Error
-	return &games, err
+	if err != nil {
+		return nil, err
+	}
+	return &games, nil
 }
 
 func (r *gameRepository) GetGameByID(id uint) (*model.Game, error) {
 	var game model.Game
 	err := r.db.First(&game, id).Error
-	return &game, err
+	if err != nil {
+		return nil, err
+	}
+	return &game, nil
 }
