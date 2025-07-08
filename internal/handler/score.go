@@ -93,6 +93,7 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "score submitted successfully"})
 }
+
 func (h *ScoreHandler) GetScoresByGameID(c *gin.Context) {
 	gameIDStr := c.Query("game_id")
 	if gameIDStr == "" {
@@ -111,15 +112,10 @@ func (h *ScoreHandler) GetScoresByGameID(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
-
-	if len(scores) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "no scores found for this game"})
-		return
-	}
-
 	c.JSON(http.StatusOK, scores)
 
 }
+
 func (h *ScoreHandler) GetScoresByPlayerID(c *gin.Context) {
 	playerIDStr := c.Query("player_id")
 	if playerIDStr == "" {
@@ -127,20 +123,15 @@ func (h *ScoreHandler) GetScoresByPlayerID(c *gin.Context) {
 		return
 	}
 
-	gameID, err := strconv.Atoi(playerIDStr)
+	playerID, err := strconv.Atoi(playerIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid player ID"})
 		return
 	}
 
-	scores, err := h.sr.GetScoresByPlayerID(uint(gameID))
+	scores, err := h.sr.GetScoresByPlayerID(uint(playerID))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
-		return
-	}
-
-	if len(scores) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "no scores found for this player"})
 		return
 	}
 
