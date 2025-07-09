@@ -48,3 +48,14 @@ func AuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func AdminMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if isAdmin := c.GetBool("admin"); !isAdmin {
+			c.JSON(http.StatusForbidden, gin.H{"error": "forbidden resource"})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
