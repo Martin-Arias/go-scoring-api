@@ -7,6 +7,7 @@ import (
 	"github.com/Martin-Arias/go-scoring-api/internal/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+	"gorm.io/gorm"
 )
 
 type GameHandler struct {
@@ -27,11 +28,24 @@ func (h *GameHandler) Create(c *gin.Context) {
 		return
 	}
 
+	//check if game already exists
+	existingGame, err := h.gr.GetGameByName(req.Name)
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+			return
+		}
+	}
+	if existingGame != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "game already exists"})
+		return
+	}
+
 	game, err := h.gr.CreateGame(req.Name)
 
 	if err != nil {
 		log.Error().Err(err).Msg("error creating game")
-		c.JSON(http.StatusConflict, gin.H{"error": "error creating game"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 

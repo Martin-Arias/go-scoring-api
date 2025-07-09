@@ -9,6 +9,7 @@ type GameRepository interface {
 	CreateGame(name string) (*model.Game, error)
 	ListGames() (*[]model.Game, error)
 	GetGameByID(id uint) (*model.Game, error)
+	GetGameByName(name string) (*model.Game, error)
 }
 
 type gameRepository struct {
@@ -40,6 +41,15 @@ func (r *gameRepository) ListGames() (*[]model.Game, error) {
 func (r *gameRepository) GetGameByID(id uint) (*model.Game, error) {
 	var game model.Game
 	err := r.db.First(&game, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &game, nil
+}
+
+func (r *gameRepository) GetGameByName(name string) (*model.Game, error) {
+	var game model.Game
+	err := r.db.Where("name = ?", name).First(&game).Error
 	if err != nil {
 		return nil, err
 	}
