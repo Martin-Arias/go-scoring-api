@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/Martin-Arias/go-scoring-api/internal/handler"
 	"github.com/Martin-Arias/go-scoring-api/internal/middleware"
@@ -13,33 +12,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gorm.io/gorm"
 )
-
-// Define metrics
-var (
-	HttpRequestTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "api_http_request_total",
-		Help: "Total number of requests processed by the API",
-	}, []string{"path", "status"})
-
-	HttpRequestErrorTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "api_http_request_error_total",
-		Help: "Total number of errors returned by the API",
-	}, []string{"path", "status"})
-)
-
-// Middleware to record incoming requests metrics
-func RequestMetricsMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		path := c.Request.URL.Path
-		c.Next()
-		status := c.Writer.Status()
-		if status < 400 {
-			HttpRequestTotal.WithLabelValues(path, strconv.Itoa(status)).Inc()
-		} else {
-			HttpRequestErrorTotal.WithLabelValues(path, strconv.Itoa(status)).Inc()
-		}
-	}
-}
 
 var db *gorm.DB
 
@@ -62,7 +34,7 @@ func setupRouter() *gin.Engine {
 
 	r := gin.Default()
 	r.GET("/metrics", PrometheusHandler())
-	r.Use(RequestMetricsMiddleware())
+	r.Use(middleware.RequestMetricsMiddleware())
 
 	authHandler := handler.NewAuthHandler(ur)
 	gameHandler := handler.NewGameHandler(gr)
@@ -87,7 +59,7 @@ func setupRouter() *gin.Engine {
 	return r
 }
 func init() {
-	customRegistry.MustRegister(HttpRequestTotal, HttpRequestErrorTotal)
+	customRegistry.MustRegister(middleware.HttpRequestTotal, middleware.HttpRequestErrorTotal)
 	dsn := os.Getenv("DATABASE_URL")
 	var err error
 	db, err = repository.ConnectAndMigrate(dsn)
