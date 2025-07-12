@@ -4,6 +4,7 @@ package handler_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 
@@ -55,7 +56,7 @@ var _ = Describe("AuthHandler Register", func() {
 		})
 	})
 
-	Context("when registration is successful", func() {
+	Context("when registration fails", func() {
 		It("should return 500 Internal server error", func() {
 			body := map[string]string{
 				"username": "martin",
@@ -64,7 +65,7 @@ var _ = Describe("AuthHandler Register", func() {
 			jsonBody, _ := json.Marshal(body)
 
 			mockRepo.On("GetUserByUsername", "martin").Return(nil, nil)
-			mockRepo.On("RegisterUser", mock.Anything).Return(gorm.ErrDuplicatedKey)
+			mockRepo.On("RegisterUser", mock.Anything).Return(errors.New("error registering user"))
 
 			req, _ := http.NewRequest(http.MethodPost, "/register", bytes.NewBuffer(jsonBody))
 			req.Header.Set("Content-Type", "application/json")
