@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Martin-Arias/go-scoring-api/internal/model"
 	"golang.org/x/crypto/bcrypt"
@@ -9,7 +10,16 @@ import (
 	"gorm.io/gorm"
 )
 
-func ConnectAndMigrate(dsn string) (*gorm.DB, error) {
+func ConnectAndMigrate() (*gorm.DB, error) {
+	//dsn
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+		os.Getenv("DB_PORT"),
+	)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, err
@@ -17,7 +27,7 @@ func ConnectAndMigrate(dsn string) (*gorm.DB, error) {
 
 	// Automatically migrate the schema
 	if err := db.AutoMigrate(&model.User{}, &model.Score{}, &model.Game{}); err != nil {
-		return nil, fmt.Errorf("error migrando: %w", err)
+		return nil, fmt.Errorf("error running migration: %w", err)
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)

@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"os"
 
 	"github.com/Martin-Arias/go-scoring-api/internal/handler"
 	"github.com/Martin-Arias/go-scoring-api/internal/middleware"
@@ -60,9 +59,8 @@ func setupRouter() *gin.Engine {
 }
 func init() {
 	customRegistry.MustRegister(middleware.HttpRequestTotal, middleware.HttpRequestErrorTotal)
-	dsn := os.Getenv("DATABASE_URL")
 	var err error
-	db, err = repository.ConnectAndMigrate(dsn)
+	db, err = repository.ConnectAndMigrate()
 	if err != nil {
 		log.Fatal("DB connection/migration failed:", err)
 	}
