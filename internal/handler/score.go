@@ -4,8 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Martin-Arias/go-scoring-api/internal/dto"
 	"github.com/Martin-Arias/go-scoring-api/internal/model"
 	"github.com/Martin-Arias/go-scoring-api/internal/repository"
+	"github.com/Martin-Arias/go-scoring-api/internal/utils"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
@@ -27,8 +29,6 @@ func NewScoreHandler(sr repository.ScoreRepository, ur repository.UserRepository
 }
 
 func (h *ScoreHandler) Submit(c *gin.Context) {
-	// TODO: Check in context if user is admin or player
-	// if user is admin, allow to submit scores for any player
 
 	var req SubmitScoreRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -137,4 +137,45 @@ func (h *ScoreHandler) GetScoresByPlayerID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, scores)
 
+}
+
+func (h *ScoreHandler) GetStatisticsByGameID(c *gin.Context) {
+
+	gameIDStr := c.Query("game_id")
+	if gameIDStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid game ID"})
+		return
+	}
+
+	gameID, err := strconv.Atoi(gameIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid game ID"})
+		return
+	}
+
+	scores, err := h.sr.GetScoresByGameID(uint(gameID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	if len(*scores) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "no scores for this game"})
+		return
+	}
+
+	points := []int{}
+	for _, s := range *scores {
+		points = append(points, s.Points)
+	}
+
+	mean, median, mode := utils.CalculateStatistics(points)
+
+	c.JSON(http.StatusOK, dto.ScoreStatisticsDTO{
+		GameID:   uint(gameID),
+		GameName: (*scores)[0].GameName,
+		Mean:     mean,
+		Median:   median,
+		Mode:     mode,
+	})
 }

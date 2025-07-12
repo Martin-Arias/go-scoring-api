@@ -5,3 +5,11 @@ type PlayerScoreDTO struct {
 	GameName string `json:"game_name"`
 	Points   int    `json:"points"`
 }
+
+type ScoreStatisticsDTO struct {
+	GameID   uint    `json:"game_id"`
+	GameName string  `json:"game_name"`
+	Mean     float64 `json:"mean"`
+	Median   float64 `json:"median"`
+	Mode     []int   `json:"mode"`
+}
