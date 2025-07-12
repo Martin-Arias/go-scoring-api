@@ -2,6 +2,8 @@ package model
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -13,4 +15,26 @@ type User struct {
 	UpdatedAt    time.Time
 	//FK
 	Scores []Score `gorm:"foreignKey:PlayerID;constraint:OnDelete:CASCADE"`
+}
+
+// AfterCreate crea puntuaciones por defecto para todos los juegos existentes
+func (u *User) AfterCreate(tx *gorm.DB) (err error) {
+	if u.IsAdmin {
+		return nil
+	}
+	var games []Game
+	if err := tx.Find(&games).Error; err != nil {
+		return err
+	}
+	for _, game := range games {
+		score := Score{
+			PlayerID: u.ID,
+			GameID:   game.ID,
+			Points:   0,
+		}
+		if err := tx.Create(&score).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }
