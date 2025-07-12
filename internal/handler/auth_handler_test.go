@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 
 	"github.com/Martin-Arias/go-scoring-api/internal/handler"
+	"github.com/Martin-Arias/go-scoring-api/internal/mocks"
 	"github.com/Martin-Arias/go-scoring-api/internal/model"
-	"github.com/Martin-Arias/go-scoring-api/internal/repository/mocks"
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
