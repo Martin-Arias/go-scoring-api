@@ -38,12 +38,12 @@ func (r *scoreRepository) SubmitScore(score model.Score) error {
 func (r *scoreRepository) GetScoresByGameID(gameID uint) (*[]dto.PlayerScoreDTO, error) {
 	var results []dto.PlayerScoreDTO
 	err := r.db.
-		Table("scores").
-		Select("users.username, games.name as game_name, scores.points").
-		Joins("JOIN users ON users.id = scores.player_id").
-		Joins("JOIN games ON games.id = scores.game_id").
-		Where("scores.game_id = ?", gameID).
-		Order("scores.points DESC").
+		Table("users").
+		Select("users.username, games.name as game_name, COALESCE(scores.points, 0) as points").
+		Joins("CROSS JOIN games").
+		Joins("LEFT JOIN scores ON scores.player_id = users.id AND scores.game_id = games.id").
+		Where("games.id = ? AND users.is_admin = false", gameID).
+		Order("points DESC").
 		Scan(&results).Error
 	if err != nil {
 		return nil, err
@@ -54,11 +54,12 @@ func (r *scoreRepository) GetScoresByGameID(gameID uint) (*[]dto.PlayerScoreDTO,
 func (r *scoreRepository) GetScoresByPlayerID(playerID uint) (*[]dto.PlayerScoreDTO, error) {
 	var results []dto.PlayerScoreDTO
 	err := r.db.
-		Table("scores").
-		Select("users.username, games.name as game_name, scores.points").
-		Joins("JOIN users ON users.id = scores.player_id").
-		Joins("JOIN games ON games.id = scores.game_id").
-		Where("scores.player_id = ?", playerID).
+		Table("games").
+		Select("users.username, games.name as game_name, COALESCE(scores.points, 0) as points").
+		Joins("JOIN users ON users.id = ?", playerID).
+		Joins("LEFT JOIN scores ON scores.game_id = games.id AND scores.player_id = users.id").
+		Where("users.is_admin = false").
+		Order("points DESC").
 		Scan(&results).Error
 	if err != nil {
 		return nil, err
