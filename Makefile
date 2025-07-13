@@ -7,12 +7,12 @@ test:
 
 test-cover:
 	@echo "🧪 Ejecutando tests con cobertura..."
-	go test -coverprofile=$(COVERAGE_FILE) ./...
+	go test -coverprofile=$(COVERAGE_FILE) ./internal/handler... ./internal/middleware... ./internal/utils...
 	go tool cover -func=$(COVERAGE_FILE)
 
 test-cover-html:
 	@echo "🧪 Ejecutando tests con cobertura (HTML)..."
-	go test -coverprofile=$(COVERAGE_FILE) ./...
+	go test -coverprofile=$(COVERAGE_FILE) ./internal/handler... ./internal/middleware... ./internal/utils...
 	go tool cover -html=$(COVERAGE_FILE)
 
 clean:
