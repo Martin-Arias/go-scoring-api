@@ -11,7 +11,7 @@ API RESTful para gestionar puntuaciones de jugadores en distintos juegos. Incluy
 - 🐘 PostgreSQL
 - 🐳 Docker & Docker Compose
 - 🔐 JWT para autenticación
-- 📊 Prometheus + middleware para métricas
+- 📊 Prometheus + Grafana para métricas
 - 📚 GORM como ORM
 - 🧪 Ginkgo + Gomega para testing
 
@@ -53,8 +53,8 @@ docker compose up --build
 
 La API estará disponible en: [http://localhost:8080](http://localhost:8080)
 
-Prometheus: [http://localhost:9090](http://localhost:9090)
-Grafana: [http://localhost:3000](http://localhost:3000)
+Prometheus en: [http://localhost:9090](http://localhost:9090)
+Grafana en: [http://localhost:3000](http://localhost:3000)
 
 ---
 
@@ -67,7 +67,7 @@ make test
 Verificar el coverage:
 
 ```bash
-make cover
+make test-cover
 ```
 
 ---
@@ -139,7 +139,7 @@ Ambos servicios se ejecutan junto con la API usando `docker-compose`.
 ```
 .
 ├── cmd/
-│   └── server/         # Punto de entrada (main.go)
+│   └── main.go         # Punto de entrada
 ├── internal/
 │   ├── handler/        # Handlers HTTP
 │   ├── repository/     # Repositorios
@@ -147,7 +147,6 @@ Ambos servicios se ejecutan junto con la API usando `docker-compose`.
 │   ├── dto/            # Data Transfer Objects
 │   ├── middleware/     # Middlewares de auth y métricas
 │   ├── db/             # Migraciones
-│   ├── auth/           # Generación de JWT y hash de contraseñas
 │   └── utils/          # Funciones auxiliares (estadísticas, etc)
 ├── Dockerfile
 ├── docker-compose.yml
