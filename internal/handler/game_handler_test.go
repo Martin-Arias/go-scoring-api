@@ -14,140 +14,89 @@ import (
 	"github.com/gin-gonic/gin"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
 )
 
-var _ = Describe("GameHandler List", func() {
+var _ = Describe("GameHandler", func() {
 	var (
-		r        *gin.Engine
-		mockRepo *mocks.GameRepositoryMock
-		gameH    *handler.GameHandler
+		router *gin.Engine
+		gr     *mocks.GameRepositoryMock
 	)
 
 	BeforeEach(func() {
 		gin.SetMode(gin.TestMode)
-		r = gin.Default()
-		mockRepo = new(mocks.GameRepositoryMock)
-		gameH = handler.NewGameHandler(mockRepo)
-		r.GET("/games", gameH.List)
+		router = gin.Default()
+		gr = new(mocks.GameRepositoryMock)
+		handler := handler.NewGameHandler(gr)
+
+		router.GET("/games", handler.List)
+		router.POST("/games", handler.Create)
 	})
 
-	Context("when games exist", func() {
-		It("returns 200 and a list of games", func() {
-			games := &[]model.Game{
+	Describe("GET /games", func() {
+		It("should return 200 and a list of games", func() {
+			gr.On("ListGames").Return(&[]model.Game{
 				{ID: 1, Name: "Tetris"},
 				{ID: 2, Name: "Age of Empires"},
-			}
-			mockRepo.On("ListGames").Return(games, nil)
+			}, nil)
 
-			req, _ := http.NewRequest(http.MethodGet, "/games", nil)
-			resp := httptest.NewRecorder()
-			r.ServeHTTP(resp, req)
+			resp := makeRequest(router, http.MethodGet, "/games", nil)
 
 			Expect(resp.Code).To(Equal(http.StatusOK))
 
-			var response []dto.GameDTO
-			err := json.Unmarshal(resp.Body.Bytes(), &response)
-			Expect(err).To(BeNil())
-			Expect(response).To(HaveLen(2))
-			Expect(response[0].Name).To(Equal("Tetris"))
+			var body []dto.GameDTO
+			err := json.Unmarshal(resp.Body.Bytes(), &body)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(body).To(HaveLen(2))
+			Expect(body[0].Name).To(Equal("Tetris"))
 		})
-	})
 
-	Context("when repository returns an error listing games", func() {
-		It("returns 500", func() {
-			mockRepo.On("ListGames").Return(nil, assert.AnError)
-
-			req, _ := http.NewRequest(http.MethodGet, "/games", nil)
-			resp := httptest.NewRecorder()
-			r.ServeHTTP(resp, req)
-
+		It("should return 500 if repository fails", func() {
+			gr.On("ListGames").Return(nil, errors.New("db error"))
+			resp := makeRequest(router, http.MethodGet, "/games", nil)
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 		})
 	})
-})
 
-var _ = Describe("GameHandler Create", func() {
-	var (
-		r        *gin.Engine
-		mockRepo *mocks.GameRepositoryMock
-		gameH    *handler.GameHandler
-	)
+	Describe("POST /games", func() {
+		It("should return 201 when game is created", func() {
+			gr.On("GetGameByName", "Tetris").Return(nil, gorm.ErrRecordNotFound)
+			gr.On("CreateGame", "Tetris").Return(&model.Game{ID: 1, Name: "Tetris"}, nil)
 
-	BeforeEach(func() {
-		gin.SetMode(gin.TestMode)
-		r = gin.Default()
-		mockRepo = new(mocks.GameRepositoryMock)
-		gameH = handler.NewGameHandler(mockRepo)
-		r.POST("/games", gameH.Create)
-	})
+			payload := map[string]string{"name": "Tetris"}
+			body, _ := json.Marshal(payload)
 
-	Context("when a new game is created", func() {
-		It("returns 201 and the created game json", func() {
-			createdGame := &model.Game{
-				ID: 1, Name: "Tetris",
-			}
-			body := map[string]string{
-				"name": "Tetris",
-			}
-			jsonBody, _ := json.Marshal(body)
-
-			mockRepo.On("GetGameByName", body["name"]).Return(nil, gorm.ErrRecordNotFound)
-			mockRepo.On("CreateGame", body["name"]).Return(createdGame, nil)
-
-			req, _ := http.NewRequest(http.MethodPost, "/games", bytes.NewBuffer(jsonBody))
-			req.Header.Set("Content-Type", "application/json")
-			resp := httptest.NewRecorder()
-			r.ServeHTTP(resp, req)
-
+			resp := makeRequest(router, http.MethodPost, "/games", body)
 			Expect(resp.Code).To(Equal(http.StatusCreated))
 
-			var response dto.GameDTO
-			err := json.Unmarshal(resp.Body.Bytes(), &response)
-			Expect(err).To(BeNil())
-			Expect(response.Name).To(Equal("Tetris"))
+			var dto dto.GameDTO
+			Expect(json.Unmarshal(resp.Body.Bytes(), &dto)).To(Succeed())
+			Expect(dto.Name).To(Equal("Tetris"))
 		})
-	})
 
-	Context("when the game to create already exists", func() {
-		It("returns 409 - conflict error", func() {
-			existingGame := &model.Game{
-				ID: 1, Name: "Tetris",
-			}
-			body := map[string]string{
-				"name": "Tetris",
-			}
-			jsonBody, _ := json.Marshal(body)
+		It("should return 409 when game already exists", func() {
+			gr.On("GetGameByName", "Tetris").Return(&model.Game{ID: 1, Name: "Tetris"}, nil)
 
-			mockRepo.On("GetGameByName", body["name"]).Return(existingGame, nil)
-
-			req, _ := http.NewRequest(http.MethodPost, "/games", bytes.NewBuffer(jsonBody))
-			req.Header.Set("Content-Type", "application/json")
-			resp := httptest.NewRecorder()
-			r.ServeHTTP(resp, req)
-
+			body, _ := json.Marshal(map[string]string{"name": "Tetris"})
+			resp := makeRequest(router, http.MethodPost, "/games", body)
 			Expect(resp.Code).To(Equal(http.StatusConflict))
 		})
-	})
 
-	Context("when a game creation fails", func() {
-		It("returns 500", func() {
-			body := map[string]string{
-				"name": "Tetris",
-			}
-			jsonBody, _ := json.Marshal(body)
+		It("should return 500 if creation fails", func() {
+			gr.On("GetGameByName", "Tetris").Return(nil, gorm.ErrRecordNotFound)
+			gr.On("CreateGame", "Tetris").Return(nil, errors.New("insert error"))
 
-			mockRepo.On("GetGameByName", body["name"]).Return(nil, gorm.ErrRecordNotFound)
-			mockRepo.On("CreateGame", body["name"]).Return(nil, errors.New("some error"))
-
-			req, _ := http.NewRequest(http.MethodPost, "/games", bytes.NewBuffer(jsonBody))
-			req.Header.Set("Content-Type", "application/json")
-			resp := httptest.NewRecorder()
-			r.ServeHTTP(resp, req)
-
+			body, _ := json.Marshal(map[string]string{"name": "Tetris"})
+			resp := makeRequest(router, http.MethodPost, "/games", body)
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-
 		})
 	})
 })
+
+func makeRequest(r *gin.Engine, method, path string, body []byte) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(method, path, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp := httptest.NewRecorder()
+	r.ServeHTTP(resp, req)
+	return resp
+}
