@@ -15,7 +15,7 @@ import (
 type SubmitScoreRequest struct {
 	PlayerID uint `json:"player_id" binding:"required"`
 	GameID   uint `json:"game_id" binding:"required"`
-	Points   int  `json:"points" binding:"required,gte=0"`
+	Points   int  `json:"points" binding:"required"`
 }
 
 type ScoreHandler struct {
@@ -71,19 +71,15 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 	}
 
 	existingScore, err := h.sr.GetScore(req.PlayerID, req.GameID)
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
 	// Check if score points are less than new score points
-	if existingScore != nil && existingScore.Points >= req.Points {
+	if existingScore.Points >= req.Points {
 		c.JSON(http.StatusConflict, gin.H{"error": "score must be higher than existing score"})
 		return
-	}
-
-	if existingScore != nil {
-		score.ID = existingScore.ID // If score exists, use its ID to update
 	}
 
 	if err := h.sr.SubmitScore(score); err != nil {
@@ -91,7 +87,7 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "score submitted successfully"})
+	c.JSON(http.StatusCreated, gin.H{"message": "score submitted successfully"})
 }
 
 func (h *ScoreHandler) GetScoresByGameID(c *gin.Context) {
@@ -104,6 +100,16 @@ func (h *ScoreHandler) GetScoresByGameID(c *gin.Context) {
 	gameID, err := strconv.Atoi(gameIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid game ID"})
+		return
+	}
+
+	_, err = h.gr.GetGameByID(uint(gameID))
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "game not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
@@ -126,6 +132,17 @@ func (h *ScoreHandler) GetScoresByPlayerID(c *gin.Context) {
 	playerID, err := strconv.Atoi(playerIDStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid player ID"})
+		return
+	}
+
+	// Check if user exists
+	_, err = h.ur.GetUserByID(uint(playerID))
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "player not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
