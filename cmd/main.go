@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/Martin-Arias/go-scoring-api/internal/handler"
 	"github.com/Martin-Arias/go-scoring-api/internal/middleware"
@@ -33,7 +34,7 @@ func setupRouter() *gin.Engine {
 
 	r := gin.Default()
 	r.GET("/metrics", PrometheusHandler())
-	r.Use(middleware.RequestMetricsMiddleware())
+	r.Use(RequestMetricsMiddleware())
 
 	authHandler := handler.NewAuthHandler(ur)
 	gameHandler := handler.NewGameHandler(gr)
@@ -58,7 +59,7 @@ func setupRouter() *gin.Engine {
 	return r
 }
 func init() {
-	customRegistry.MustRegister(middleware.HttpRequestTotal, middleware.HttpRequestErrorTotal)
+	customRegistry.MustRegister(HttpRequestTotal, HttpRequestErrorTotal)
 	var err error
 	db, err = repository.ConnectAndMigrate()
 	if err != nil {
@@ -70,4 +71,31 @@ func main() {
 	r := setupRouter()
 	// Listen and Server in 0.0.0.0:8080
 	r.Run(":8080")
+}
+
+// Define metrics
+var (
+	HttpRequestTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "api_http_request_total",
+		Help: "Total number of requests processed by the API",
+	}, []string{"path", "status"})
+
+	HttpRequestErrorTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "api_http_request_error_total",
+		Help: "Total number of errors returned by the API",
+	}, []string{"path", "status"})
+)
+
+// Middleware to record incoming requests metrics
+func RequestMetricsMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		path := c.Request.URL.Path
+		c.Next()
+		status := c.Writer.Status()
+		if status < 400 {
+			HttpRequestTotal.WithLabelValues(path, strconv.Itoa(status)).Inc()
+		} else {
+			HttpRequestErrorTotal.WithLabelValues(path, strconv.Itoa(status)).Inc()
+		}
+	}
 }
