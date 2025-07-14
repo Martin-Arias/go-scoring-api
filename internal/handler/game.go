@@ -18,6 +18,20 @@ func NewGameHandler(gr repository.GameRepository) *GameHandler {
 	return &GameHandler{gr: gr}
 }
 
+// Create creates a new game.
+//
+// @Summary Create a game
+// @Description Adds a new game to the system
+// @Tags games
+// @Accept json
+// @Produce json
+// @Param request body dto.GameDTO true "Game name"
+// @Success 201 {object} dto.GameDTO
+// @Failure 400 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /api/games [post]
 func (h *GameHandler) Create(c *gin.Context) {
 	var req struct {
 		Name string `json:"name" binding:"required"`
@@ -52,6 +66,15 @@ func (h *GameHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, dto.GameDTO{ID: game.ID, Name: game.Name})
 }
 
+// List returns all games.
+//
+// @Summary List games
+// @Description Retrieves all available games
+// @Tags games
+// @Produce json
+// @Success 200 {array} dto.GameDTO
+// @Failure 500 {object} map[string]string
+// @Router /api/games [get]
 func (h *GameHandler) List(c *gin.Context) {
 	games, err := h.gr.ListGames()
 	if err != nil {

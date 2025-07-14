@@ -4,12 +4,16 @@ import (
 	"log"
 	"strconv"
 
+	_ "github.com/Martin-Arias/go-scoring-api/docs"
 	"github.com/Martin-Arias/go-scoring-api/internal/handler"
 	"github.com/Martin-Arias/go-scoring-api/internal/middleware"
 	"github.com/Martin-Arias/go-scoring-api/internal/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/gorm"
 )
 
@@ -34,6 +38,7 @@ func setupRouter() *gin.Engine {
 
 	r := gin.Default()
 	r.GET("/metrics", PrometheusHandler())
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.Use(RequestMetricsMiddleware())
 
 	authHandler := handler.NewAuthHandler(ur)
@@ -66,6 +71,24 @@ func init() {
 		log.Fatal("DB connection/migration failed:", err)
 	}
 }
+
+// @title           Scoring API
+// @version         1.0
+// @description     API for managing players, games and scores
+// @termsOfService  http://example.com/terms/
+
+// @contact.name   Martín Arias
+// @contact.email  martin@example.com
+
+// @license.name  MIT
+// @license.url   https://opensource.org/licenses/MIT
+
+// @host      localhost:8080
+// @BasePath  /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 
 func main() {
 	r := setupRouter()

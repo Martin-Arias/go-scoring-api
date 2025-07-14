@@ -29,6 +29,21 @@ func NewScoreHandler(sr repository.ScoreRepository, ur repository.UserRepository
 	return &ScoreHandler{sr: sr, ur: ur, gr: gr}
 }
 
+// Submit submits or updates a player's score for a game.
+//
+// @Summary Submit a score
+// @Description Submits or updates the score for a player in a specific game
+// @Tags scores
+// @Accept json
+// @Produce json
+// @Param request body SubmitScoreRequest true "Score data"
+// @Success 201 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /api/scores [put]
 func (h *ScoreHandler) Submit(c *gin.Context) {
 	var req SubmitScoreRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -105,6 +120,19 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "score submitted successfully"})
 }
 
+// GetScoresByGameID returns all scores for a given game.
+//
+// @Summary Get scores by game
+// @Description Lists player scores for a specific game
+// @Tags scores
+// @Produce json
+// @Param game_id query int true "Game ID"
+// @Success 200 {array} dto.PlayerScoreDTO
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /api/scores/game [get]
 func (h *ScoreHandler) GetScoresByGameID(c *gin.Context) {
 	gameIDStr := c.Query("game_id")
 	if gameIDStr == "" {
@@ -143,6 +171,19 @@ func (h *ScoreHandler) GetScoresByGameID(c *gin.Context) {
 	c.JSON(http.StatusOK, scores)
 }
 
+// GetScoresByPlayerID returns all scores for a specific player.
+//
+// @Summary Get scores by player
+// @Description Lists game scores for a specific player
+// @Tags scores
+// @Produce json
+// @Param player_id query int true "Player ID"
+// @Success 200 {array} dto.PlayerScoreDTO
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /api/scores/user [get]
 func (h *ScoreHandler) GetScoresByPlayerID(c *gin.Context) {
 	playerIDStr := c.Query("player_id")
 	if playerIDStr == "" {
@@ -181,6 +222,19 @@ func (h *ScoreHandler) GetScoresByPlayerID(c *gin.Context) {
 	c.JSON(http.StatusOK, scores)
 }
 
+// GetStatisticsByGameID returns score statistics (mean, median, mode) for a game.
+//
+// @Summary Get game score statistics
+// @Description Calculates mean, median, and mode for a game's scores
+// @Tags scores
+// @Produce json
+// @Param game_id query int true "Game ID"
+// @Success 200 {object} dto.ScoreStatisticsDTO
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Security BearerAuth
+// @Router /api/scores/game/stats [get]
 func (h *ScoreHandler) GetStatisticsByGameID(c *gin.Context) {
 	gameIDStr := c.Query("game_id")
 	if gameIDStr == "" {

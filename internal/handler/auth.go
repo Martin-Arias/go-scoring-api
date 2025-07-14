@@ -29,6 +29,19 @@ func NewAuthHandler(ur repository.UserRepository) *AuthHandler {
 	return &AuthHandler{ur: ur}
 }
 
+// Register creates a new user account.
+//
+// @Summary Register a new user
+// @Description Creates a user with a username and password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body AuthRequest true "User credentials"
+// @Success 201 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req AuthRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -71,6 +84,19 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "user created successfully"})
 }
 
+// Login authenticates a user and returns a JWT.
+//
+// @Summary Login user
+// @Description Authenticates a user and returns a JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body AuthRequest true "User credentials"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req AuthRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
