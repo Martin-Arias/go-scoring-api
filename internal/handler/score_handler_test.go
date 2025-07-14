@@ -73,6 +73,35 @@ var _ = Describe("ScoreHandler", func() {
 			Expect(rec.Code).To(Equal(http.StatusConflict))
 			Expect(rec.Body.String()).To(ContainSubstring("score must be higher"))
 		})
+
+		It("should return 404 if player not exists", func() {
+			reqBody := `{"player_id":1, "game_id":2, "points":50}`
+
+			ur.On("GetUserByID", uint(1)).Return(nil, gorm.ErrRecordNotFound)
+
+			req := httptest.NewRequest(http.MethodPut, "/scores", strings.NewReader(reqBody))
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+			router.ServeHTTP(rec, req)
+
+			Expect(rec.Code).To(Equal(http.StatusNotFound))
+			Expect(rec.Body.String()).To(ContainSubstring("player not found"))
+		})
+
+		It("should return 404 if game not exists", func() {
+			reqBody := `{"player_id":1, "game_id":2, "points":50}`
+
+			ur.On("GetUserByID", uint(1)).Return(&model.User{ID: 1}, nil)
+			gr.On("GetGameByID", uint(2)).Return(nil, gorm.ErrRecordNotFound)
+
+			req := httptest.NewRequest(http.MethodPut, "/scores", strings.NewReader(reqBody))
+			req.Header.Set("Content-Type", "application/json")
+			rec := httptest.NewRecorder()
+			router.ServeHTTP(rec, req)
+
+			Expect(rec.Code).To(Equal(http.StatusNotFound))
+			Expect(rec.Body.String()).To(ContainSubstring("game not found"))
+		})
 	})
 
 	Describe("GetScoresByGameID", func() {
