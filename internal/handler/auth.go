@@ -32,23 +32,26 @@ func NewAuthHandler(ur repository.UserRepository) *AuthHandler {
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req AuthRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Warn().Err(err).Msg("invalid register request")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
 	user, err := h.ur.GetUserByUsername(req.Username)
 	if err != nil && err != gorm.ErrRecordNotFound {
+		log.Error().Err(err).Msg("error checking existing user")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
-	log.Debug().Msgf("User found: %v", user)
 	if user != nil {
+		log.Info().Str("username", req.Username).Msg("username already exists")
 		c.JSON(http.StatusConflict, gin.H{"error": "username already exists"})
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
+		log.Error().Err(err).Msg("error hashing password")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
@@ -59,42 +62,49 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	if err := h.ur.RegisterUser(&newUser); err != nil {
+		log.Error().Err(err).Str("username", req.Username).Msg("failed to register user")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"message": "user created successfully"})
 
+	log.Info().Str("username", req.Username).Msg("user registered successfully")
+	c.JSON(http.StatusCreated, gin.H{"message": "user created successfully"})
 }
 
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req AuthRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Warn().Err(err).Msg("invalid login request")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
 
 	user, err := h.ur.GetUserByUsername(req.Username)
-
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
+			log.Info().Str("username", req.Username).Msg("login failed: user not found")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
 			return
 		}
+		log.Error().Err(err).Str("username", req.Username).Msg("error fetching user")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
+		log.Info().Str("username", req.Username).Msg("login failed: invalid password")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
 		return
 	}
 
 	token, err := GenerateToken(*user)
 	if err != nil {
+		log.Error().Err(err).Str("username", req.Username).Msg("failed to generate token")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 
+	log.Info().Str("username", user.Username).Uint("user_id", user.ID).Msg("user logged in successfully")
 	c.JSON(http.StatusOK, gin.H{
 		"token":    token,
 		"username": user.Username,
