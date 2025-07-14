@@ -72,6 +72,14 @@ make test-cover
 
 ---
 
+## 📚 Swagger
+
+La documentación interactiva de los endpoints está disponible en:
+
+🔗 [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
+
+---
+
 ## 📘 Endpoints disponibles
 
 ### 🔐 Autenticación
