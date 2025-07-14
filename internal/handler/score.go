@@ -38,10 +38,10 @@ func NewScoreHandler(sr repository.ScoreRepository, ur repository.UserRepository
 // @Produce json
 // @Param request body SubmitScoreRequest true "Score data"
 // @Success 201 {object} map[string]string
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 409 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 409 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
 // @Router /api/scores [put]
 func (h *ScoreHandler) Submit(c *gin.Context) {
@@ -128,9 +128,9 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 // @Produce json
 // @Param game_id query int true "Game ID"
 // @Success 200 {array} dto.PlayerScoreDTO
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
 // @Router /api/scores/game [get]
 func (h *ScoreHandler) GetScoresByGameID(c *gin.Context) {
@@ -179,9 +179,9 @@ func (h *ScoreHandler) GetScoresByGameID(c *gin.Context) {
 // @Produce json
 // @Param player_id query int true "Player ID"
 // @Success 200 {array} dto.PlayerScoreDTO
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
 // @Router /api/scores/user [get]
 func (h *ScoreHandler) GetScoresByPlayerID(c *gin.Context) {
@@ -230,9 +230,9 @@ func (h *ScoreHandler) GetScoresByPlayerID(c *gin.Context) {
 // @Produce json
 // @Param game_id query int true "Game ID"
 // @Success 200 {object} dto.ScoreStatisticsDTO
-// @Failure 400 {object} map[string]string
-// @Failure 404 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
 // @Router /api/scores/game/stats [get]
 func (h *ScoreHandler) GetStatisticsByGameID(c *gin.Context) {

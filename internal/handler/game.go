@@ -27,9 +27,9 @@ func NewGameHandler(gr repository.GameRepository) *GameHandler {
 // @Produce json
 // @Param request body dto.GameDTO true "Game name"
 // @Success 201 {object} dto.GameDTO
-// @Failure 400 {object} map[string]string
-// @Failure 409 {object} map[string]string
-// @Failure 500 {object} map[string]string
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 409 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Security BearerAuth
 // @Router /api/games [post]
 func (h *GameHandler) Create(c *gin.Context) {
@@ -73,7 +73,7 @@ func (h *GameHandler) Create(c *gin.Context) {
 // @Tags games
 // @Produce json
 // @Success 200 {array} dto.GameDTO
-// @Failure 500 {object} map[string]string
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /api/games [get]
 func (h *GameHandler) List(c *gin.Context) {
 	games, err := h.gr.ListGames()
