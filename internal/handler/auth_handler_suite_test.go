@@ -1,4 +1,3 @@
-// internal/handler/auth_handler_suite_test.go
 package handler_test
 
 import (
