@@ -176,6 +176,8 @@ Ambos servicios se ejecutan junto con la API usando `docker-compose`.
 
 ---
 
+![Diagrama ER](db_schema.png)
+
 ## ✍️ Autor
 
 Desarrollado por [Martin Arias](https://github.com/Martin-Arias)
