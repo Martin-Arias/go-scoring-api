@@ -4,10 +4,13 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/Martin-Arias/go-scoring-api/cmd/api/handlers"
 	_ "github.com/Martin-Arias/go-scoring-api/docs"
 	"github.com/Martin-Arias/go-scoring-api/internal/handler"
 	"github.com/Martin-Arias/go-scoring-api/internal/middleware"
 	"github.com/Martin-Arias/go-scoring-api/internal/repository"
+	userRepo "github.com/Martin-Arias/go-scoring-api/internal/repository/postgres/repository"
+	"github.com/Martin-Arias/go-scoring-api/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -33,21 +36,23 @@ func PrometheusHandler() gin.HandlerFunc {
 func setupRouter() *gin.Engine {
 
 	sr := repository.NewScoreRepository(db)
-	ur := repository.NewUserRepository(db)
+	ur := userRepo.NewUserRepository(db)
 	gr := repository.NewGameRepository(db)
+
+	us := services.NewUserService(ur)
 
 	r := gin.Default()
 	r.GET("/metrics", PrometheusHandler())
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.Use(RequestMetricsMiddleware())
 
-	authHandler := handler.NewAuthHandler(ur)
+	userHandler := handlers.NewUserHandler(us)
 	gameHandler := handler.NewGameHandler(gr)
 	scoreHandler := handler.NewScoreHandler(sr, ur, gr)
 	// Public routes
 	auth := r.Group("/auth")
-	auth.POST("/register", authHandler.Register)
-	auth.POST("/login", authHandler.Login)
+	auth.POST("/register", userHandler.Register)
+	auth.POST("/login", userHandler.Login)
 
 	// Protected routes
 	api := r.Group("/api")

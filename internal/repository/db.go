@@ -25,10 +25,14 @@ func ConnectAndMigrate() (*gorm.DB, error) {
 		return nil, err
 	}
 
+	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
+
 	// Automatically migrate the schema
 	if err := db.AutoMigrate(&model.User{}, &model.Score{}, &model.Game{}); err != nil {
 		return nil, fmt.Errorf("error running migration: %w", err)
 	}
+	db.Exec(`ALTER TABLE users ALTER COLUMN id SET DEFAULT uuid_generate_v4();`)
+	db.Exec(`ALTER TABLE games ALTER COLUMN id SET DEFAULT uuid_generate_v4();`)
 
 	hash, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
 	if err != nil {

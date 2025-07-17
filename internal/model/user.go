@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	ID           uint   `gorm:"primaryKey"` // Para este id lo correcto seria un UUID, pero me es mas fácil copiar y pegar uint
+	ID           string `gorm:"primaryKey"`
 	Username     string `gorm:"uniqueIndex;not null"`
 	PasswordHash string `gorm:"not null"`
 	IsAdmin      bool   `gorm:"default:false"`
