@@ -2,8 +2,6 @@ package repository
 
 import (
 	"time"
-
-	"github.com/Martin-Arias/go-scoring-api/internal/model"
 )
 
 type User struct {
@@ -14,5 +12,5 @@ type User struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	//FK
-	Scores []model.Score `gorm:"foreignKey:PlayerID;constraint:OnDelete:CASCADE"`
+	Scores []Score `gorm:"foreignKey:PlayerID;constraint:OnDelete:CASCADE"`
 }

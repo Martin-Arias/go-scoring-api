@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Martin-Arias/go-scoring-api/internal/model"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -28,7 +27,7 @@ func ConnectAndMigrate() (*gorm.DB, error) {
 	db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
 
 	// Automatically migrate the schema
-	if err := db.AutoMigrate(&model.User{}, &model.Score{}, &model.Game{}); err != nil {
+	if err := db.AutoMigrate(&User{}, &Score{}, &Game{}); err != nil {
 		return nil, fmt.Errorf("error running migration: %w", err)
 	}
 	db.Exec(`ALTER TABLE users ALTER COLUMN id SET DEFAULT uuid_generate_v4();`)
@@ -40,10 +39,10 @@ func ConnectAndMigrate() (*gorm.DB, error) {
 	}
 
 	// Create the admin user if it doesn't exist
-	var adminUser model.User
+	var adminUser User
 	if err := db.First(&adminUser, "username = ?", "admin").Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			adminUser = model.User{
+			adminUser = User{
 				Username:     "admin",
 				PasswordHash: string(hash), // hashed password for "admin123"
 				IsAdmin:      true,

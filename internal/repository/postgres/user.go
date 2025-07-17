@@ -3,7 +3,8 @@ package repository
 import (
 	"context"
 
-	"github.com/Martin-Arias/go-scoring-api/internal/model"
+	"github.com/Martin-Arias/go-scoring-api/internal/core/auth"
+	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 	"github.com/Martin-Arias/go-scoring-api/internal/ports"
 	"gorm.io/gorm"
 )
@@ -16,28 +17,46 @@ func NewUserRepository(db *gorm.DB) ports.UserRepository {
 	return &userRepository{db: db}
 }
 
-func (r *userRepository) GetUserByUsername(username string) (*model.User, error) {
-	var user model.User
+func (r *userRepository) GetUserByUsername(username string) (*domain.User, error) {
+	var user User
 	err := r.db.First(&user, "username = ?", username).Error
 	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+	return &domain.User{
+		ID:       user.ID,
+		Username: user.Username,
+		IsAdmin:  user.IsAdmin,
+	}, nil
 }
 
-func (r *userRepository) GetUserByID(id string) (*model.User, error) {
-	var user model.User
+func (r *userRepository) GetUserCreds(username string) (*auth.AuthUserData, error) {
+	var user User
+	err := r.db.First(&user, "username = ?", username).Error
+	if err != nil {
+		return nil, err
+	}
+	return &auth.AuthUserData{
+		ID:           user.ID,
+		Username:     user.Username,
+		PasswordHash: user.PasswordHash,
+		IsAdmin:      user.IsAdmin,
+	}, nil
+}
+
+func (r *userRepository) GetUserByID(id string) (*domain.User, error) {
+	var user User
 	err := r.db.First(&user, "id = ?", id).Error
 	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+	return &domain.User{
+		ID:       user.ID,
+		Username: user.Username,
+		IsAdmin:  user.IsAdmin,
+	}, nil
 }
 
-func (r *userRepository) RegisterUser(user *model.User) error {
-	err := r.db.Create(user).Error
-	return err
-}
 func (r *userRepository) CreatePlayerWithInitialScores(ctx context.Context, username string, passwordHash string) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
@@ -50,14 +69,14 @@ func (r *userRepository) CreatePlayerWithInitialScores(ctx context.Context, user
 			return err
 		}
 
-		var games []model.Game
+		var games []Game
 		if err := tx.Find(&games).Error; err != nil {
 			return err
 		}
 
-		var scores []model.Score
+		var scores []Score
 		for _, game := range games {
-			scores = append(scores, model.Score{
+			scores = append(scores, Score{
 				GameID:   game.ID,
 				PlayerID: newUser.ID,
 				Points:   0,
