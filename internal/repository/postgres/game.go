@@ -81,16 +81,16 @@ func (r *gameRepository) CreateGameWithInitialScores(ctx context.Context, name s
 		}
 
 		var users []User
-		if err := tx.Find(&users).Error; err != nil {
+		if err := tx.Where("is_admin = FALSE").Find(&users).Error; err != nil {
 			return err
 		}
 
 		var scores []Score
 		for _, user := range users {
 			scores = append(scores, Score{
-				GameID:   newGame.ID,
-				PlayerID: user.ID,
-				Points:   0,
+				GameID: newGame.ID,
+				UserID: user.ID,
+				Points: 0,
 			})
 		}
 
