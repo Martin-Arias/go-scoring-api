@@ -3,13 +3,14 @@ package ports
 import (
 	"context"
 
-	"github.com/Martin-Arias/go-scoring-api/internal/model"
+	"github.com/Martin-Arias/go-scoring-api/internal/core/auth"
+	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 )
 
 type UserRepository interface {
-	RegisterUser(user *model.User) error
-	GetUserByID(id string) (*model.User, error)
-	GetUserByUsername(username string) (*model.User, error)
+	GetUserByID(id string) (*domain.User, error)
+	GetUserByUsername(username string) (*domain.User, error)
+	GetUserCreds(username string) (*auth.AuthUserData, error)
 	CreatePlayerWithInitialScores(ctx context.Context, username string, passwordHash string) error
 }
 
