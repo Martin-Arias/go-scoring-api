@@ -1,19 +1,15 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
+	"github.com/Martin-Arias/go-scoring-api/cmd/api/dto"
 	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 	"github.com/Martin-Arias/go-scoring-api/internal/ports"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
-
-type SubmitScoreRequest struct {
-	UserID string `json:"user_id" binding:"required"`
-	GameID string `json:"game_id" binding:"required"`
-	Points int    `json:"points" binding:"required"`
-}
 
 type ScoreHandler struct {
 	ss ports.ScoreService
@@ -32,14 +28,13 @@ func NewScoreHandler(ss ports.ScoreService) *ScoreHandler {
 // @Produce json
 // @Param request body SubmitScoreRequest true "Score data"
 // @Success 201 {object} map[string]string
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Failure 409 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
+// @Failure 400 {object} map[string]interface{} "error: string"
+// @Failure 409 {object} map[string]interface{} "error: string"
+// @Failure 500 {object} map[string]interface{} "error: string"
 // @Security BearerAuth
 // @Router /api/scores [put]
 func (h *ScoreHandler) Submit(c *gin.Context) {
-	var req SubmitScoreRequest
+	var req dto.SubmitScoreRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Warn().Err(err).Msg("invalid submit score request")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
@@ -54,8 +49,12 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 	})
 
 	if err != nil {
-		log.Warn().Err(err).Msg("score could not be submitted")
-		c.JSON(http.StatusCreated, gin.H{"error": "failed submitting score"})
+		log.Warn().Err(err).Any("req", req).Msg("score could not be submitted")
+		if errors.Is(err, domain.ErrScoreNotAllowed) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": domain.ErrScoreNotAllowed.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed submitting score"})
 		return
 	}
 
@@ -91,8 +90,20 @@ func (h *ScoreHandler) GetGameScores(c *gin.Context) {
 		return
 	}
 
+	var response []dto.ScoreResponse
+	for _, score := range *scores {
+		response = append(response, dto.ScoreResponse{
+			ID:       score.ID,
+			UserID:   score.UserID,
+			Username: score.Username,
+			GameID:   score.GameID,
+			GameName: score.GameName,
+			Points:   score.Points,
+		})
+	}
+
 	log.Info().Str("game_id", gameID).Int("count", len(*scores)).Msg("scores retrieved successfully")
-	c.JSON(http.StatusOK, scores)
+	c.JSON(http.StatusOK, response)
 }
 
 // GetUserScores returns all scores for a specific User.
@@ -123,8 +134,20 @@ func (h *ScoreHandler) GetUserScores(c *gin.Context) {
 		return
 	}
 
+	var response []dto.ScoreResponse
+	for _, score := range *scores {
+		response = append(response, dto.ScoreResponse{
+			ID:       score.ID,
+			UserID:   score.UserID,
+			Username: score.Username,
+			GameID:   score.GameID,
+			GameName: score.GameName,
+			Points:   score.Points,
+		})
+	}
+
 	log.Info().Str("user_id", userID).Int("count", len(*scores)).Msg("user scores retrieved successfully")
-	c.JSON(http.StatusOK, scores)
+	c.JSON(http.StatusOK, response)
 }
 
 // GetStatisticsByGameID returns score statistics (mean, median, mode) for a game.

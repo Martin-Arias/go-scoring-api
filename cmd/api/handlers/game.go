@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/Martin-Arias/go-scoring-api/cmd/api/dto"
 	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 	"github.com/Martin-Arias/go-scoring-api/internal/ports"
 	"github.com/gin-gonic/gin"
@@ -27,24 +28,24 @@ func NewGameHandler(gs ports.GameService) *GameHandler {
 // @Produce json
 // @Param request body dto.GameDTO true "Game name"
 // @Success 201 {object} dto.GameDTO
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 409 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
+// @Failure 400 {object} map[string]interface{} "error: string"
+// @Failure 409 {object} map[string]interface{} "error: string"
+// @Failure 500 {object} map[string]interface{} "error: string"
 // @Security BearerAuth
 // @Router /api/games [post]
 func (h *GameHandler) Create(c *gin.Context) {
-	var req struct {
-		Name string `json:"name" binding:"required"`
-	}
-	if err := c.BindJSON(&req); err != nil {
+
+	var createReq dto.CreateRequest
+
+	if err := c.BindJSON(&createReq); err != nil {
 		log.Warn().Err(err).Msg("invalid input for game creation")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid input"})
 		return
 	}
 
-	createdGame, err := h.gs.CreateGame(req.Name)
+	createdGame, err := h.gs.CreateGame(createReq.Name)
 	if err != nil {
-		log.Warn().Err(err).Str("name", req.Name).Msg("game could not be created")
+		log.Warn().Err(err).Str("name", createReq.Name).Msg("game could not be created")
 		if errors.Is(err, domain.ErrGameAlreadyExists) {
 			c.JSON(http.StatusConflict, gin.H{"error": domain.ErrGameAlreadyExists.Error()})
 			return
@@ -54,7 +55,10 @@ func (h *GameHandler) Create(c *gin.Context) {
 	}
 
 	log.Info().Str("game_id", createdGame.ID).Str("game_name", createdGame.Name).Msg("game created successfully")
-	c.JSON(http.StatusCreated, createdGame)
+	c.JSON(http.StatusCreated, dto.GameResponse{
+		ID:   createdGame.ID,
+		Name: createdGame.Name,
+	})
 }
 
 // List returns all games.
@@ -64,7 +68,7 @@ func (h *GameHandler) Create(c *gin.Context) {
 // @Tags games
 // @Produce json
 // @Success 200 {array} dto.GameDTO
-// @Failure 500 {object} dto.ErrorResponse
+// @Failure 500 {object} map[string]interface{} "error: string"
 // @Router /api/games [get]
 func (h *GameHandler) List(c *gin.Context) {
 	games, err := h.gs.GetGames()
@@ -74,6 +78,13 @@ func (h *GameHandler) List(c *gin.Context) {
 		return
 	}
 
+	var response []dto.GameResponse
+	for _, game := range *games {
+		response = append(response, dto.GameResponse{
+			ID:   game.ID,
+			Name: game.Name,
+		})
+	}
 	log.Info().Int("game_count", len(*games)).Msg("games listed successfully")
-	c.JSON(http.StatusOK, games)
+	c.JSON(http.StatusOK, response)
 }

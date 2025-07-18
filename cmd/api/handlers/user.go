@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/Martin-Arias/go-scoring-api/cmd/api/core"
+	"github.com/Martin-Arias/go-scoring-api/cmd/api/dto"
 	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 	"github.com/Martin-Arias/go-scoring-api/internal/ports"
 	"github.com/gin-gonic/gin"
@@ -33,7 +33,7 @@ func NewUserHandler(us ports.UserService) *UserHandler {
 // @Failure 500 {object} map[string]interface{} "error: string"
 // @Router /auth/register [post]
 func (uh *UserHandler) Register(c *gin.Context) {
-	var req core.AuthRequest
+	var req dto.AuthRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Warn().Err(err).Msg("invalid register request")
@@ -52,7 +52,10 @@ func (uh *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, createdUser)
+	c.JSON(http.StatusCreated, dto.RegisterResponse{
+		ID:       createdUser.ID,
+		Username: createdUser.Username,
+	})
 }
 
 // Login authenticates a user and returns a JWT.
@@ -64,12 +67,12 @@ func (uh *UserHandler) Register(c *gin.Context) {
 // @Produce json
 // @Param request body AuthRequest true "User credentials"
 // @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
+// @Failure 400 {object} map[string]interface{} "error: string"
+// @Failure 409 {object} map[string]interface{} "error: string"
+// @Failure 500 {object} map[string]interface{} "error: string"
 // @Router /auth/login [post]
 func (uh *UserHandler) Login(c *gin.Context) {
-	var req core.AuthRequest
+	var req dto.AuthRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		log.Warn().Err(err).Msg("invalid login request")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
@@ -89,7 +92,7 @@ func (uh *UserHandler) Login(c *gin.Context) {
 	}
 
 	log.Info().Str("username", req.Username).Msg("user logged in successfully")
-	c.JSON(http.StatusOK, gin.H{
-		"token": token,
+	c.JSON(http.StatusOK, dto.LoginResponse{
+		Token: token,
 	})
 }
