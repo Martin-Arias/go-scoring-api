@@ -1,5 +1,6 @@
 package mocks
 
+/*
 import (
 	"context"
 
@@ -37,3 +38,4 @@ func (m *UserRepositoryMock) CreatePlayerWithInitialScores(ctx context.Context, 
 	args := m.Called(ctx, username, passwordHash)
 	return args.Error(0)
 }
+*/

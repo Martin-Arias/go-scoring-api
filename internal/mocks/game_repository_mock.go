@@ -1,7 +1,7 @@
 package mocks
 
+/*
 import (
-	"github.com/Martin-Arias/go-scoring-api/internal/model"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -25,7 +25,7 @@ func (m *GameRepositoryMock) CreateGame(name string) (*model.Game, error) {
 	return args.Get(0).(*model.Game), args.Error(1)
 }
 
-func (m *GameRepositoryMock) GetGameByID(id uint) (*model.Game, error) {
+func (m *GameRepositoryMock) GetGameByID(id string) (*model.Game, error) {
 	args := m.Called(id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -40,3 +40,4 @@ func (m *GameRepositoryMock) GetGameByName(name string) (*model.Game, error) {
 	}
 	return args.Get(0).(*model.Game), args.Error(1)
 }
+*/

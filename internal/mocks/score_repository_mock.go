@@ -1,5 +1,6 @@
 package mocks
 
+/*
 import (
 	"github.com/Martin-Arias/go-scoring-api/internal/dto"
 	"github.com/Martin-Arias/go-scoring-api/internal/model"
@@ -10,7 +11,7 @@ type ScoreRepositoryMock struct {
 	mock.Mock
 }
 
-func (m *ScoreRepositoryMock) GetScoresByGameID(gameID uint) (*[]dto.PlayerScoreDTO, error) {
+func (m *ScoreRepositoryMock) GetScoresByGameID(gameID string) (*[]dto.PlayerScoreDTO, error) {
 	args := m.Called(gameID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -18,7 +19,7 @@ func (m *ScoreRepositoryMock) GetScoresByGameID(gameID uint) (*[]dto.PlayerScore
 	return args.Get(0).(*[]dto.PlayerScoreDTO), args.Error(1)
 }
 
-func (m *ScoreRepositoryMock) GetScoresByPlayerID(playerID uint) (*[]dto.PlayerScoreDTO, error) {
+func (m *ScoreRepositoryMock) GetScoresByPlayerID(playerID string) (*[]dto.PlayerScoreDTO, error) {
 	args := m.Called(playerID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -26,7 +27,7 @@ func (m *ScoreRepositoryMock) GetScoresByPlayerID(playerID uint) (*[]dto.PlayerS
 	return args.Get(0).(*[]dto.PlayerScoreDTO), args.Error(1)
 }
 
-func (m *ScoreRepositoryMock) GetScore(playerID, gameID uint) (*model.Score, error) {
+func (m *ScoreRepositoryMock) GetScore(playerID, gameID string) (*model.Score, error) {
 	args := m.Called(playerID, gameID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -38,3 +39,4 @@ func (m *ScoreRepositoryMock) SubmitScore(score model.Score) error {
 	args := m.Called(score)
 	return args.Error(0)
 }
+*/
