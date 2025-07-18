@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"errors"
+
 	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 	"github.com/Martin-Arias/go-scoring-api/internal/dto"
 	"github.com/Martin-Arias/go-scoring-api/internal/ports"
@@ -19,6 +21,9 @@ func (r *scoreRepository) GetScore(playerID, gameID string) (*domain.Score, erro
 	var score Score
 	err := r.db.Where("user_id = ? AND game_id = ?", playerID, gameID).First(&score).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrScoreNotFound
+		}
 		return nil, err
 	}
 
@@ -39,7 +44,7 @@ func (r *scoreRepository) SubmitScore(score *domain.Score) error {
 }
 
 func (r *scoreRepository) GetScoresByGameID(gameID string) (*[]domain.Score, error) {
-	var scores []dto.UserScoreDTO //Move this dto to score_model
+	var scores []dto.UserScoreDTO
 	err := r.db.
 		Table("scores").
 		Select("users.username, scores.user_id, games.name as game_name, scores.game_id, scores.id as score_id, scores.points").
@@ -50,6 +55,10 @@ func (r *scoreRepository) GetScoresByGameID(gameID string) (*[]domain.Score, err
 		Scan(&scores).Error
 	if err != nil {
 		return nil, err
+	}
+
+	if len(scores) == 0 {
+		return nil, domain.ErrScoreNotFound
 	}
 
 	var scoresResponse []domain.Score
@@ -80,6 +89,11 @@ func (r *scoreRepository) GetScoresByUserID(playerID string) (*[]domain.Score, e
 	if err != nil {
 		return nil, err
 	}
+
+	if len(scores) == 0 {
+		return nil, domain.ErrScoreNotFound
+	}
+
 	var scoresResponse []domain.Score
 	for _, score := range scores {
 		scoresResponse = append(scoresResponse, domain.Score{
@@ -91,5 +105,6 @@ func (r *scoreRepository) GetScoresByUserID(playerID string) (*[]domain.Score, e
 			Points:   score.Points,
 		})
 	}
+
 	return &scoresResponse, nil
 }
