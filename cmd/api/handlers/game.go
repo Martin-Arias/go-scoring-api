@@ -46,7 +46,7 @@ func (h *GameHandler) Create(c *gin.Context) {
 	if err != nil {
 		log.Warn().Err(err).Str("name", req.Name).Msg("game could not be created")
 		if errors.Is(err, domain.ErrGameAlreadyExists) {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": domain.ErrGameAlreadyExists.Error()})
+			c.JSON(http.StatusConflict, gin.H{"error": domain.ErrGameAlreadyExists.Error()})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed creating game"})
