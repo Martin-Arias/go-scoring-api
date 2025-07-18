@@ -50,12 +50,19 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 
 	if err != nil {
 		log.Warn().Err(err).Any("req", req).Msg("score could not be submitted")
-		if errors.Is(err, domain.ErrScoreNotAllowed) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": domain.ErrScoreNotAllowed.Error()})
+		switch {
+		case errors.Is(err, domain.ErrScoreNotAllowed):
+			c.JSON(http.StatusConflict, gin.H{"error": domain.ErrScoreNotAllowed.Error()})
+			return
+
+		case errors.Is(err, domain.ErrGameNotFound), errors.Is(err, domain.ErrUserNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed submitting score"})
 			return
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed submitting score"})
-		return
 	}
 
 	log.Info().Str("user_id", req.UserID).Str("game_id", req.GameID).Int("points", req.Points).Msg("score submitted successfully")
@@ -86,6 +93,10 @@ func (h *ScoreHandler) GetGameScores(c *gin.Context) {
 	scores, err := h.ss.GetGameScores(gameID)
 	if err != nil {
 		log.Warn().Err(err).Msg("game scores could not be retrieved")
+		if errors.Is(err, domain.ErrGameNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": domain.ErrGameNotFound.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed retrieving game scores"})
 		return
 	}
@@ -130,6 +141,9 @@ func (h *ScoreHandler) GetUserScores(c *gin.Context) {
 	scores, err := h.ss.GetUserScores(userID)
 	if err != nil {
 		log.Warn().Err(err).Msg("user scores could not be retrieved")
+		if errors.Is(err, domain.ErrUserNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": domain.ErrUserNotFound.Error()})
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed retrieving user scores"})
 		return
 	}
@@ -174,6 +188,10 @@ func (h *ScoreHandler) GetGameStats(c *gin.Context) {
 	stats, err := h.ss.GetGameStats(gameID)
 	if err != nil {
 		log.Warn().Err(err).Msg("game stats could not be retrieved")
+		if errors.Is(err, domain.ErrScoreNotFound) {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": domain.ErrScoreNotFound.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed retrieving game stats"})
 		return
 	}
