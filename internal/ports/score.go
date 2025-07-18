@@ -7,7 +7,7 @@ import (
 
 type ScoreRepository interface {
 	GetScoresByGameID(gameID string) (*[]domain.Score, error)
-	GetScoresByPlayerID(playerID string) (*[]domain.Score, error)
+	GetScoresByUserID(playerID string) (*[]domain.Score, error)
 	GetScore(playerID, gameID string) (*domain.Score, error)
 	SubmitScore(score *domain.Score) error
 }

@@ -19,7 +19,7 @@ func (m *ScoreRepositoryMock) GetScoresByGameID(gameID string) (*[]dto.PlayerSco
 	return args.Get(0).(*[]dto.PlayerScoreDTO), args.Error(1)
 }
 
-func (m *ScoreRepositoryMock) GetScoresByPlayerID(playerID string) (*[]dto.PlayerScoreDTO, error) {
+func (m *ScoreRepositoryMock) GetScoresByUserID(playerID string) (*[]dto.PlayerScoreDTO, error) {
 	args := m.Called(playerID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)

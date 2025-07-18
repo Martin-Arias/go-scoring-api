@@ -17,7 +17,7 @@ func NewScoreRepository(db *gorm.DB) ports.ScoreRepository {
 
 func (r *scoreRepository) GetScore(playerID, gameID string) (*domain.Score, error) {
 	var score Score
-	err := r.db.Where("player_id = ? AND game_id = ?", playerID, gameID).First(&score).Error
+	err := r.db.Where("user_id = ? AND game_id = ?", playerID, gameID).First(&score).Error
 	if err != nil {
 		return nil, err
 	}
@@ -29,16 +29,21 @@ func (r *scoreRepository) GetScore(playerID, gameID string) (*domain.Score, erro
 }
 
 func (r *scoreRepository) SubmitScore(score *domain.Score) error {
-	err := r.db.Save(&score).Error
+	err := r.db.Save(&Score{
+		ID:     score.ID,
+		GameID: score.GameID,
+		UserID: score.UserID,
+		Points: score.Points,
+	}).Error
 	return err
 }
 
 func (r *scoreRepository) GetScoresByGameID(gameID string) (*[]domain.Score, error) {
-	var scores []dto.PlayerScoreDTO //Move this dto to score_model
+	var scores []dto.UserScoreDTO //Move this dto to score_model
 	err := r.db.
 		Table("scores").
-		Select("users.username, games.name as game_name, scores.points").
-		Joins("JOIN users ON users.id = scores.player_id").
+		Select("users.username, scores.user_id, games.name as game_name, scores.game_id, scores.id as score_id, scores.points").
+		Joins("JOIN users ON users.id = scores.user_id").
 		Joins("JOIN games ON games.id = scores.game_id").
 		Where("scores.game_id = ?", gameID).
 		Order("scores.points DESC").
@@ -50,26 +55,27 @@ func (r *scoreRepository) GetScoresByGameID(gameID string) (*[]domain.Score, err
 	var scoresResponse []domain.Score
 	for _, score := range scores {
 		scoresResponse = append(scoresResponse, domain.Score{
-			User: domain.User{
-				Username: score.Username,
-			},
-			Game: domain.Game{
-				Name: score.GameName,
-			},
-			Points: score.Points,
+			ID:       score.ScoreID,
+			Username: score.Username,
+			UserID:   score.UserID,
+			GameName: score.GameName,
+			GameID:   score.GameID,
+			Points:   score.Points,
 		})
 	}
+
 	return &scoresResponse, nil
 }
 
-func (r *scoreRepository) GetScoresByPlayerID(playerID string) (*[]domain.Score, error) {
-	var scores []dto.PlayerScoreDTO
+func (r *scoreRepository) GetScoresByUserID(playerID string) (*[]domain.Score, error) {
+	var scores []dto.UserScoreDTO
 	err := r.db.
 		Table("scores").
-		Select("users.username, games.name as game_name, scores.points").
-		Joins("JOIN users ON users.id = scores.player_id").
+		Select("users.username, scores.user_id, games.name as game_name, scores.game_id, scores.id as score_id, scores.points").
+		Joins("JOIN users ON users.id = scores.user_id").
 		Joins("JOIN games ON games.id = scores.game_id").
-		Where("scores.player_id = ?", playerID).
+		Order("scores.points DESC").
+		Where("scores.user_id = ?", playerID).
 		Scan(&scores).Error
 	if err != nil {
 		return nil, err
@@ -77,13 +83,12 @@ func (r *scoreRepository) GetScoresByPlayerID(playerID string) (*[]domain.Score,
 	var scoresResponse []domain.Score
 	for _, score := range scores {
 		scoresResponse = append(scoresResponse, domain.Score{
-			User: domain.User{
-				Username: score.Username,
-			},
-			Game: domain.Game{
-				Name: score.GameName,
-			},
-			Points: score.Points,
+			ID:       score.ScoreID,
+			Username: score.Username,
+			UserID:   score.UserID,
+			GameName: score.GameName,
+			GameID:   score.GameID,
+			Points:   score.Points,
 		})
 	}
 	return &scoresResponse, nil

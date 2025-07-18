@@ -33,7 +33,7 @@ func (ss *ScoreService) Submit(newScore *domain.Score) error {
 			log.Warn().Str("user_id", newScore.UserID).Msg("user not found")
 			return err
 		}
-		log.Error().Err(err).Msg("error fetching player")
+		log.Error().Err(err).Msg("error fetching user")
 		return err
 	}
 
@@ -60,7 +60,7 @@ func (ss *ScoreService) Submit(newScore *domain.Score) error {
 
 	if existingScore != nil && existingScore.Points >= newScore.Points {
 		log.Info().
-			Str("player_id", newScore.UserID).
+			Str("user_id", newScore.UserID).
 			Str("game_id", newScore.GameID).
 			Int("existing_points", existingScore.Points).
 			Int("new_points", newScore.Points).
@@ -109,11 +109,11 @@ func (ss *ScoreService) GetUserScores(userID string) (*[]domain.Score, error) {
 			log.Warn().Str("user_id", userID).Msg("user not found")
 			return nil, err
 		}
-		log.Error().Err(err).Msg("error fetching player")
+		log.Error().Err(err).Msg("error fetching user")
 		return nil, err
 	}
 
-	scores, err := ss.sr.GetScoresByPlayerID(userID)
+	scores, err := ss.sr.GetScoresByUserID(userID)
 	if err != nil {
 		log.Error().Err(err).Str("user_id", userID).Msg("error retrieving user scores")
 		return nil, err
@@ -151,7 +151,7 @@ func (ss *ScoreService) GetGameStats(gameID string) (*dto.ScoreStatisticsDTO, er
 
 	return &dto.ScoreStatisticsDTO{
 		GameID:   gameID,
-		GameName: (*scores)[0].Name,
+		GameName: (*scores)[0].GameName,
 		Mean:     mean,
 		Median:   median,
 		Mode:     mode,

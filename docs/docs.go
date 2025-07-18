@@ -114,7 +114,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Submits or updates the score for a player in a specific game",
+                "description": "Submits or updates the score for a user in a specific game",
                 "consumes": [
                     "application/json"
                 ],
@@ -180,7 +180,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Lists player scores for a specific game",
+                "description": "Lists user scores for a specific game",
                 "produces": [
                     "application/json"
                 ],
@@ -287,19 +287,19 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Lists game scores for a specific player",
+                "description": "Lists game scores for a specific user",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "scores"
                 ],
-                "summary": "Get scores by player",
+                "summary": "Get scores by user",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "Player ID",
-                        "name": "player_id",
+                        "description": "user ID",
+                        "name": "user_id",
                         "in": "query",
                         "required": true
                     }
@@ -522,14 +522,14 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "game_id",
-                "player_id",
+                "user_id",
                 "points"
             ],
             "properties": {
                 "game_id": {
                     "type": "integer"
                 },
-                "player_id": {
+                "user_id": {
                     "type": "integer"
                 },
                 "points": {

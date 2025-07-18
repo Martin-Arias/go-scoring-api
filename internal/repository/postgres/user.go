@@ -77,9 +77,9 @@ func (r *userRepository) CreatePlayerWithInitialScores(ctx context.Context, user
 		var scores []Score
 		for _, game := range games {
 			scores = append(scores, Score{
-				GameID:   game.ID,
-				PlayerID: newUser.ID,
-				Points:   0,
+				GameID: game.ID,
+				UserID: newUser.ID,
+				Points: 0,
 			})
 		}
 

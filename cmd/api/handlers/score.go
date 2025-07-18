@@ -23,10 +23,10 @@ func NewScoreHandler(ss ports.ScoreService) *ScoreHandler {
 	return &ScoreHandler{ss: ss}
 }
 
-// Submit submits or updates a player's score for a game.
+// Submit submits or updates a user's score for a game.
 //
 // @Summary Submit a score
-// @Description Submits or updates the score for a player in a specific game
+// @Description Submits or updates the score for a user in a specific game
 // @Tags scores
 // @Accept json
 // @Produce json
@@ -45,7 +45,7 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
-	log.Debug().Str("player_id", req.UserID).Str("game_id", req.GameID).Int("points", req.Points).Msg("submitting score")
+	log.Debug().Str("user_id", req.UserID).Str("game_id", req.GameID).Int("points", req.Points).Msg("submitting score")
 
 	err := h.ss.Submit(&domain.Score{
 		GameID: req.GameID,
@@ -59,14 +59,14 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 		return
 	}
 
-	log.Info().Str("player_id", req.UserID).Str("game_id", req.GameID).Int("points", req.Points).Msg("score submitted successfully")
+	log.Info().Str("user_id", req.UserID).Str("game_id", req.GameID).Int("points", req.Points).Msg("score submitted successfully")
 	c.JSON(http.StatusCreated, gin.H{"message": "score submitted successfully"})
 }
 
-// GetScoresByGameID returns all scores for a given game.
+// GetGameScores returns all scores for a given game.
 //
 // @Summary Get scores by game
-// @Description Lists player scores for a specific game
+// @Description Lists user scores for a specific game
 // @Tags scores
 // @Produce json
 // @Param game_id query int true "Game ID"

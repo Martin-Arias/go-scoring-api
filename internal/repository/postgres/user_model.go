@@ -12,5 +12,5 @@ type User struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	//FK
-	Scores []Score `gorm:"foreignKey:PlayerID;constraint:OnDelete:CASCADE"`
+	Scores []Score `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
