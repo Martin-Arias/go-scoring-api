@@ -11,10 +11,10 @@ type UserRepository interface {
 	GetUserByID(id string) (*domain.User, error)
 	GetUserByUsername(username string) (*domain.User, error)
 	GetUserCreds(username string) (*auth.AuthUserData, error)
-	CreatePlayerWithInitialScores(ctx context.Context, username string, passwordHash string) error
+	CreatePlayerWithInitialScores(ctx context.Context, username string, passwordHash string) (*domain.User, error)
 }
 
 type UserService interface {
-	RegisterUser(username, password string) error
+	RegisterUser(username, password string) (*domain.User, error)
 	LoginUser(username, password string) (string, error)
 }

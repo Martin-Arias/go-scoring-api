@@ -39,7 +39,7 @@ func (uh *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	if err := uh.us.RegisterUser(req.Username, req.Password); err != nil {
+	if _, err := uh.us.RegisterUser(req.Username, req.Password); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error creating user"})
 		return
 	}

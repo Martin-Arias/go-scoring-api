@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Martin-Arias/go-scoring-api/internal/core/auth"
 	"github.com/Martin-Arias/go-scoring-api/internal/domain"
@@ -21,6 +22,9 @@ func (r *userRepository) GetUserByUsername(username string) (*domain.User, error
 	var user User
 	err := r.db.First(&user, "username = ?", username).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrUserNotFound
+		}
 		return nil, err
 	}
 	return &domain.User{
@@ -34,6 +38,9 @@ func (r *userRepository) GetUserCreds(username string) (*auth.AuthUserData, erro
 	var user User
 	err := r.db.First(&user, "username = ?", username).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrUserNotFound
+		}
 		return nil, err
 	}
 	return &auth.AuthUserData{
@@ -48,6 +55,9 @@ func (r *userRepository) GetUserByID(id string) (*domain.User, error) {
 	var user User
 	err := r.db.First(&user, "id = ?", id).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrUserNotFound
+		}
 		return nil, err
 	}
 	return &domain.User{
@@ -57,15 +67,17 @@ func (r *userRepository) GetUserByID(id string) (*domain.User, error) {
 	}, nil
 }
 
-func (r *userRepository) CreatePlayerWithInitialScores(ctx context.Context, username string, passwordHash string) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-
-		newUser := &User{
-			Username:     username,
-			PasswordHash: passwordHash,
-		}
+func (r *userRepository) CreatePlayerWithInitialScores(ctx context.Context, username string, passwordHash string) (*domain.User, error) {
+	newUser := &User{
+		Username:     username,
+		PasswordHash: passwordHash,
+	}
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
 		if err := tx.Create(newUser).Error; err != nil {
+			if errors.Is(err, gorm.ErrDuplicatedKey) {
+				return domain.ErrUsernameAlreadyExists
+			}
 			return err
 		}
 
@@ -88,7 +100,15 @@ func (r *userRepository) CreatePlayerWithInitialScores(ctx context.Context, user
 				return err
 			}
 		}
-
 		return nil
 	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.User{
+		ID:       newUser.ID,
+		Username: newUser.Username,
+	}, nil
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 )
 
 type UserService struct {
@@ -23,41 +22,26 @@ func NewUserService(ur ports.UserRepository) ports.UserService {
 	}
 }
 
-func (us *UserService) RegisterUser(username, password string) error {
-	user, err := us.ur.GetUserByUsername(username)
-
-	//FIX: User domain errors
-	if err != nil && err != gorm.ErrRecordNotFound {
-		log.Error().Err(err).Msg("error checking existing user")
-		return err
-	}
-
-	if user != nil {
-		log.Info().Str("username", username).Msg("username already exists")
-		return err
-	}
+func (us *UserService) RegisterUser(username, password string) (*domain.User, error) {
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		log.Error().Err(err).Msg("error hashing password")
-		return err
+		return nil, err
 	}
 
-	if err := us.ur.CreatePlayerWithInitialScores(context.Background(), username, string(hash)); err != nil {
+	createdUser, err := us.ur.CreatePlayerWithInitialScores(context.Background(), username, string(hash))
+	if err != nil {
 		log.Error().Err(err).Str("username", username).Msg("failed to register user")
-		return err
+		return nil, err
 	}
 
-	return nil
+	return createdUser, nil
 }
 
 func (us *UserService) LoginUser(username, password string) (string, error) {
 	user, err := us.ur.GetUserCreds(username)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			log.Info().Str("username", username).Msg("login failed: user not found")
-			return "", err
-		}
 		log.Error().Err(err).Str("username", username).Msg("error fetching user")
 		return "", err
 	}
