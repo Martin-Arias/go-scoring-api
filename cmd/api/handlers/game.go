@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
+	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 	"github.com/Martin-Arias/go-scoring-api/internal/ports"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -42,7 +44,11 @@ func (h *GameHandler) Create(c *gin.Context) {
 
 	createdGame, err := h.gs.CreateGame(req.Name)
 	if err != nil {
-		log.Warn().Err(err).Msg("game could not be created")
+		log.Warn().Err(err).Str("name", req.Name).Msg("game could not be created")
+		if errors.Is(err, domain.ErrGameAlreadyExists) {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": domain.ErrGameAlreadyExists.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed creating game"})
 		return
 	}
@@ -69,6 +75,5 @@ func (h *GameHandler) List(c *gin.Context) {
 	}
 
 	log.Info().Int("game_count", len(*games)).Msg("games listed successfully")
-
 	c.JSON(http.StatusOK, games)
 }
