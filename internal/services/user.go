@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Martin-Arias/go-scoring-api/internal/model"
+	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 	"github.com/Martin-Arias/go-scoring-api/internal/ports"
 	"github.com/golang-jwt/jwt"
 	"github.com/rs/zerolog/log"
@@ -52,7 +52,7 @@ func (us *UserService) RegisterUser(username, password string) error {
 }
 
 func (us *UserService) LoginUser(username, password string) (string, error) {
-	user, err := us.ur.GetUserByUsername(username)
+	user, err := us.ur.GetUserCreds(username)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			log.Info().Str("username", username).Msg("login failed: user not found")
@@ -67,7 +67,12 @@ func (us *UserService) LoginUser(username, password string) (string, error) {
 		return "", err
 	}
 
-	token, err := GenerateToken(*user)
+	token, err := GenerateToken(&domain.User{
+		ID:       user.ID,
+		Username: user.Username,
+		IsAdmin:  user.IsAdmin,
+	})
+
 	if err != nil {
 		log.Error().Err(err).Str("username", username).Msg("failed to generate token")
 		return "", nil
@@ -75,7 +80,9 @@ func (us *UserService) LoginUser(username, password string) (string, error) {
 
 	return token, nil
 }
-func GenerateToken(user model.User) (string, error) {
+
+func GenerateToken(user *domain.User) (string, error) {
+	var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 	claims := jwt.MapClaims{
 		"uid":      user.ID,
 		"username": user.Username,
@@ -83,9 +90,6 @@ func GenerateToken(user model.User) (string, error) {
 		"iat":      time.Now().Unix(),
 		"exp":      time.Now().Add(24 * time.Hour).Unix(),
 	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtSecret)
 }
-
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
