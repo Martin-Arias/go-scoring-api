@@ -1,6 +1,8 @@
 package services
 
 import (
+	"context"
+
 	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 	"github.com/Martin-Arias/go-scoring-api/internal/ports"
 	"github.com/rs/zerolog/log"
@@ -17,7 +19,7 @@ func NewGameService(gr ports.GameRepository) ports.GameService {
 }
 
 func (gs *gameService) CreateGame(gameName string) (*domain.Game, error) {
-	game, err := gs.gr.CreateGame(gameName)
+	game, err := gs.gr.CreateGameWithInitialScores(context.Background(), gameName)
 	if err != nil {
 		log.Error().Err(err).Str("game_name", gameName).Msg("failed to create game")
 		return nil, err

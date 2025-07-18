@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 	"github.com/Martin-Arias/go-scoring-api/internal/ports"
 	"gorm.io/gorm"
@@ -65,5 +67,48 @@ func (r *gameRepository) GetGameByName(name string) (*domain.Game, error) {
 	return &domain.Game{
 		ID:   game.ID,
 		Name: game.Name,
+	}, nil
+}
+
+func (r *gameRepository) CreateGameWithInitialScores(ctx context.Context, name string) (*domain.Game, error) {
+	newGame := &Game{
+		Name: name,
+	}
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Create(newGame).Error; err != nil {
+			return err
+		}
+
+		var users []User
+		if err := tx.Find(&users).Error; err != nil {
+			return err
+		}
+
+		var scores []Score
+		for _, user := range users {
+			scores = append(scores, Score{
+				GameID:   newGame.ID,
+				PlayerID: user.ID,
+				Points:   0,
+			})
+		}
+
+		if len(scores) > 0 {
+			if err := tx.Create(&scores).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.Game{
+		ID:   newGame.ID,
+		Name: newGame.Name,
 	}, nil
 }
