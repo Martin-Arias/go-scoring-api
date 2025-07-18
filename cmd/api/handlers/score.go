@@ -143,6 +143,7 @@ func (h *ScoreHandler) GetUserScores(c *gin.Context) {
 		log.Warn().Err(err).Msg("user scores could not be retrieved")
 		if errors.Is(err, domain.ErrUserNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": domain.ErrUserNotFound.Error()})
+			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed retrieving user scores"})
 		return
