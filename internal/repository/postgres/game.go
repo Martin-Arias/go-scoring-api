@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 	"github.com/Martin-Arias/go-scoring-api/internal/ports"
@@ -20,6 +21,9 @@ func (r *gameRepository) CreateGame(name string) (*domain.Game, error) {
 	game := Game{Name: name}
 	err := r.db.Create(&game).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return nil, domain.ErrGameAlreadyExists
+		}
 		return nil, err
 	}
 
@@ -50,6 +54,9 @@ func (r *gameRepository) GetGameByID(id string) (*domain.Game, error) {
 	var game Game
 	err := r.db.First(&game, "id = ?", id).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrGameNotFound
+		}
 		return nil, err
 	}
 	return &domain.Game{
@@ -62,6 +69,9 @@ func (r *gameRepository) GetGameByName(name string) (*domain.Game, error) {
 	var game Game
 	err := r.db.Where("name = ?", name).First(&game).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrGameNotFound
+		}
 		return nil, err
 	}
 	return &domain.Game{
@@ -71,12 +81,13 @@ func (r *gameRepository) GetGameByName(name string) (*domain.Game, error) {
 }
 
 func (r *gameRepository) CreateGameWithInitialScores(ctx context.Context, name string) (*domain.Game, error) {
-	newGame := &Game{
-		Name: name,
-	}
-	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	newGame := &Game{Name: name}
 
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(newGame).Error; err != nil {
+			if errors.Is(err, gorm.ErrDuplicatedKey) {
+				return domain.ErrGameAlreadyExists
+			}
 			return err
 		}
 
