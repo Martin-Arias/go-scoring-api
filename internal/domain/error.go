@@ -18,4 +18,6 @@ var (
 	ErrGameCreation   = errors.New("error creating game")
 	ErrFetchingUsers  = errors.New("error fetching users")
 	ErrCreatingScores = errors.New("error creating initial scores")
+
+	ErrScoreNotAllowed = errors.New("new score must be higher than previous score")
 )

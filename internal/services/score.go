@@ -8,7 +8,6 @@ import (
 	"github.com/Martin-Arias/go-scoring-api/internal/ports"
 	"github.com/Martin-Arias/go-scoring-api/internal/utils"
 	"github.com/rs/zerolog/log"
-	"gorm.io/gorm"
 )
 
 type ScoreService struct {
@@ -29,33 +28,27 @@ func (ss *ScoreService) Submit(newScore *domain.Score) error {
 
 	usr, err := ss.ur.GetUserByID(newScore.UserID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			log.Warn().Str("user_id", newScore.UserID).Msg("user not found")
-			return err
-		}
-		log.Error().Err(err).Msg("error fetching user")
+		log.Error().Err(err).Str("user_id", newScore.UserID).Msg("error fetching user")
 		return err
 	}
 
 	if usr.IsAdmin {
 		log.Warn().Str("username", usr.Username).Msg("admin tried to submit score")
-		return errors.New("user not found")
+		return domain.ErrUserNotFound
 	}
 
 	_, err = ss.gr.GetGameByID(newScore.GameID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			log.Warn().Str("game_id", newScore.GameID).Msg("game not found")
-			return err
-		}
-		log.Error().Err(err).Msg("error fetching game")
+		log.Error().Err(err).Str("game_id", newScore.GameID).Msg("error fetching game")
 		return err
 	}
 
 	existingScore, err := ss.sr.GetScore(newScore.UserID, newScore.GameID)
-	if err != nil && err != gorm.ErrRecordNotFound {
-		log.Error().Err(err).Msg("error retrieving existing score")
-		return err
+	if err != nil {
+		if !errors.Is(err, domain.ErrScoreNotFound) {
+			log.Error().Err(err).Any("newScore", newScore).Msg("error checking if score existence")
+			return err
+		}
 	}
 
 	if existingScore != nil && existingScore.Points >= newScore.Points {
@@ -65,7 +58,7 @@ func (ss *ScoreService) Submit(newScore *domain.Score) error {
 			Int("existing_points", existingScore.Points).
 			Int("new_points", newScore.Points).
 			Msg("score not updated - new score is not higher")
-		return err
+		return domain.ErrScoreNotAllowed
 	}
 
 	if existingScore != nil {
@@ -81,14 +74,9 @@ func (ss *ScoreService) Submit(newScore *domain.Score) error {
 }
 
 func (ss *ScoreService) GetGameScores(gameID string) (*[]domain.Score, error) {
-
 	_, err := ss.gr.GetGameByID(gameID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			log.Warn().Str("game_id", gameID).Msg("game not found")
-			return nil, err
-		}
-		log.Error().Err(err).Msg("error checking game existence")
+		log.Error().Err(err).Str("game_id", gameID).Msg("error checking game existence")
 		return nil, err
 	}
 
@@ -105,11 +93,7 @@ func (ss *ScoreService) GetGameScores(gameID string) (*[]domain.Score, error) {
 func (ss *ScoreService) GetUserScores(userID string) (*[]domain.Score, error) {
 	_, err := ss.ur.GetUserByID(userID)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			log.Warn().Str("user_id", userID).Msg("user not found")
-			return nil, err
-		}
-		log.Error().Err(err).Msg("error fetching user")
+		log.Error().Err(err).Str("user_id", userID).Msg("error fetching user")
 		return nil, err
 	}
 
@@ -127,11 +111,6 @@ func (ss *ScoreService) GetGameStats(gameID string) (*dto.ScoreStatisticsDTO, er
 	scores, err := ss.sr.GetScoresByGameID(gameID)
 	if err != nil {
 		log.Error().Err(err).Str("game_id", gameID).Msg("error retrieving scores for statistics")
-		return nil, err
-	}
-
-	if len(*scores) == 0 {
-		log.Info().Str("game_id", gameID).Msg("no scores found for statistics")
 		return nil, err
 	}
 

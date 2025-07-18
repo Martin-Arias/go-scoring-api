@@ -26,7 +26,7 @@ func (us *UserService) RegisterUser(username, password string) (*domain.User, er
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		log.Error().Err(err).Msg("error hashing password")
+		log.Error().Err(err).Msg("failed to hash password")
 		return nil, err
 	}
 
@@ -42,7 +42,7 @@ func (us *UserService) RegisterUser(username, password string) (*domain.User, er
 func (us *UserService) LoginUser(username, password string) (string, error) {
 	user, err := us.ur.GetUserCreds(username)
 	if err != nil {
-		log.Error().Err(err).Str("username", username).Msg("error fetching user")
+		log.Error().Err(err).Str("username", username).Msg("failed to fetch user")
 		return "", err
 	}
 

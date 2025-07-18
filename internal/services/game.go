@@ -31,7 +31,7 @@ func (gs *gameService) CreateGame(gameName string) (*domain.Game, error) {
 func (gs *gameService) GetGames() (*[]domain.Game, error) {
 	games, err := gs.gr.ListGames()
 	if err != nil {
-		log.Error().Err(err).Msg("failed retrieving games")
+		log.Error().Err(err).Msg("failed to retrieve games")
 		return nil, err
 	}
 
