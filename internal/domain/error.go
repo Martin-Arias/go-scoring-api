@@ -8,6 +8,8 @@ type ErrorResponse struct {
 }
 
 var (
+	ErrUnexpected    = errors.New("unexpected error")
+	ErrAuthInvalid   = errors.New("invalid username or password")
 	ErrScoreNotFound = errors.New("score not found")
 	ErrGameNotFound  = errors.New("game not found")
 	ErrUserNotFound  = errors.New("user not found")

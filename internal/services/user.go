@@ -48,7 +48,7 @@ func (us *UserService) LoginUser(username, password string) (string, error) {
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		log.Info().Str("username", username).Msg("login failed: invalid password")
-		return "", err
+		return "", domain.ErrAuthInvalid
 	}
 
 	token, err := GenerateToken(&domain.User{
@@ -59,7 +59,7 @@ func (us *UserService) LoginUser(username, password string) (string, error) {
 
 	if err != nil {
 		log.Error().Err(err).Str("username", username).Msg("failed to generate token")
-		return "", nil
+		return "", domain.ErrUnexpected
 	}
 
 	return token, nil

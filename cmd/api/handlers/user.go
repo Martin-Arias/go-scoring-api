@@ -1,9 +1,11 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/Martin-Arias/go-scoring-api/cmd/api/core"
+	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 	"github.com/Martin-Arias/go-scoring-api/internal/ports"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -39,12 +41,18 @@ func (uh *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	if _, err := uh.us.RegisterUser(req.Username, req.Password); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error creating user"})
+	createdUser, err := uh.us.RegisterUser(req.Username, req.Password)
+	if err != nil {
+		log.Error().Err(err).Str("user_name", req.Username).Msg("failed to register user")
+		if errors.Is(err, domain.ErrUsernameAlreadyExists) {
+			c.JSON(http.StatusConflict, gin.H{"error": domain.ErrUsernameAlreadyExists.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "error registering user"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "user created successfully"})
+	c.JSON(http.StatusCreated, createdUser)
 }
 
 // Login authenticates a user and returns a JWT.
@@ -70,7 +78,12 @@ func (uh *UserHandler) Login(c *gin.Context) {
 
 	token, err := uh.us.LoginUser(req.Username, req.Password)
 	if err != nil {
-		log.Warn().Err(err).Msg("error getting user")
+		log.Warn().Err(err).Str("username", req.Username).Msg("failed to login user")
+
+		if errors.Is(err, domain.ErrUserNotFound) || errors.Is(err, domain.ErrAuthInvalid) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": domain.ErrAuthInvalid.Error()})
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{"error": "internal server error"})
 		return
 	}
