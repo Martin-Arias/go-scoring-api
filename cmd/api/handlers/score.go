@@ -104,7 +104,6 @@ func (h *ScoreHandler) GetGameScores(c *gin.Context) {
 	var response []dto.ScoreResponse
 	for _, score := range *scores {
 		response = append(response, dto.ScoreResponse{
-			ID:       score.ID,
 			UserID:   score.UserID,
 			Username: score.Username,
 			GameID:   score.GameID,
@@ -152,7 +151,6 @@ func (h *ScoreHandler) GetUserScores(c *gin.Context) {
 	var response []dto.ScoreResponse
 	for _, score := range *scores {
 		response = append(response, dto.ScoreResponse{
-			ID:       score.ID,
 			UserID:   score.UserID,
 			Username: score.Username,
 			GameID:   score.GameID,
