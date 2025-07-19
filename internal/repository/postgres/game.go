@@ -17,22 +17,6 @@ func NewGameRepository(db *gorm.DB) ports.GameRepository {
 	return &gameRepository{db: db}
 }
 
-func (r *gameRepository) CreateGame(name string) (*domain.Game, error) {
-	game := Game{Name: name}
-	err := r.db.Create(&game).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return nil, domain.ErrGameAlreadyExists
-		}
-		return nil, err
-	}
-
-	return &domain.Game{
-		ID:   game.ID,
-		Name: game.Name,
-	}, nil
-}
-
 func (r *gameRepository) ListGames() (*[]domain.Game, error) {
 	var games []Game
 	err := r.db.Find(&games).Error

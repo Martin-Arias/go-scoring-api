@@ -12,7 +12,6 @@ type GameService interface {
 }
 
 type GameRepository interface {
-	CreateGame(name string) (*domain.Game, error)
 	ListGames() (*[]domain.Game, error)
 	GetGameByID(id string) (*domain.Game, error)
 	GetGameByName(name string) (*domain.Game, error)
