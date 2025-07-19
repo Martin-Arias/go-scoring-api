@@ -1,7 +1,6 @@
 package dto
 
 type UserScoreDTO struct {
-	ScoreID  string `json:"score_id"  gorm:"column:score_id"`
 	UserID   string `json:"user_id"   gorm:"column:user_id"`
 	GameID   string `json:"game_id"   gorm:"column:game_id"`
 	Username string `json:"username"  gorm:"column:username"`
