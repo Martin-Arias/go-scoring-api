@@ -78,7 +78,7 @@ func init() {
 }
 
 // @title           Scoring API
-// @version         1.0
+// @version         2.0
 // @description     API for managing players, games and scores
 // @termsOfService  http://example.com/terms/
 

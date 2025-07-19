@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Martin-Arias/go-scoring-api/internal/domain"
-	"github.com/Martin-Arias/go-scoring-api/internal/mocks"
+	mocks "github.com/Martin-Arias/go-scoring-api/internal/mocks/repository"
 	"github.com/Martin-Arias/go-scoring-api/internal/services"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
