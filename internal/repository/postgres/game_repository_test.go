@@ -9,6 +9,10 @@ import (
 )
 
 func TestGameRepository_CreateAndFetch(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping integration test")
+	}
+
 	db := repository.SetupTestDB(t)
 	repo := repository.NewGameRepository(db)
 
