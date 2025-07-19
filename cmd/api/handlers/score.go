@@ -97,6 +97,10 @@ func (h *ScoreHandler) GetGameScores(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": domain.ErrGameNotFound.Error()})
 			return
 		}
+		if errors.Is(err, domain.ErrScoreNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": domain.ErrScoreNotFound.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed retrieving game scores"})
 		return
 	}

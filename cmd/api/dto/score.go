@@ -7,7 +7,6 @@ type SubmitScoreRequest struct {
 }
 
 type ScoreResponse struct {
-	ID       string `json:"id"`
 	UserID   string `json:"user_id"`
 	Username string `json:"username"`
 	GameID   string `json:"game_id"`
