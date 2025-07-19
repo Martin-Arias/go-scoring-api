@@ -67,7 +67,7 @@ func (r *userRepository) GetUserByID(id string) (*domain.User, error) {
 	}, nil
 }
 
-func (r *userRepository) CreatePlayerWithInitialScores(ctx context.Context, username string, passwordHash string) (*domain.User, error) {
+func (r *userRepository) CreateUserWithInitialScores(ctx context.Context, username string, passwordHash string) (*domain.User, error) {
 	newUser := &User{
 		Username:     username,
 		PasswordHash: passwordHash,

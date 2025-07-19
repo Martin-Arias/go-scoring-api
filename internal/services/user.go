@@ -30,7 +30,7 @@ func (us *UserService) RegisterUser(username, password string) (*domain.User, er
 		return nil, err
 	}
 
-	createdUser, err := us.ur.CreatePlayerWithInitialScores(context.Background(), username, string(hash))
+	createdUser, err := us.ur.CreateUserWithInitialScores(context.Background(), username, string(hash))
 	if err != nil {
 		log.Error().Err(err).Str("username", username).Msg("failed to register user")
 		return nil, err
