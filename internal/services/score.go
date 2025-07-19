@@ -61,10 +61,6 @@ func (ss *ScoreService) Submit(newScore *domain.Score) error {
 		return domain.ErrScoreNotAllowed
 	}
 
-	if existingScore != nil {
-		newScore.ID = existingScore.ID
-	}
-
 	if err := ss.sr.SubmitScore(newScore); err != nil {
 		log.Error().Err(err).Msg("failed to submit score")
 		return err
