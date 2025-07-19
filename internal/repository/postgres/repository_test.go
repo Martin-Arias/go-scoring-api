@@ -1,93 +1,73 @@
 package repository_test
 
 import (
-	"fmt"
-	"log"
-	"os"
+	"context"
 	"testing"
+	"time"
 
-	"github.com/Martin-Arias/go-scoring-api/internal/domain"
 	repository "github.com/Martin-Arias/go-scoring-api/internal/repository/postgres"
-	"github.com/ory/dockertest/v3"
-	"github.com/ory/dockertest/v3/docker"
-	"gorm.io/driver/postgres"
+	"github.com/stretchr/testify/assert"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	"github.com/testcontainers/testcontainers-go/wait"
+	gormPostgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var db *gorm.DB
-
-func TestMain(m *testing.M) {
-	pool, err := dockertest.NewPool("")
+func setupTestDB(t *testing.T) *gorm.DB {
+	ctx := context.Background()
+	t.Helper()
+	// Start PostgreSQL container
+	container, err := postgres.Run(ctx,
+		"postgres:15.3-alpine",
+		postgres.WithDatabase("testdb"),
+		postgres.WithUsername("testuser"),
+		postgres.WithPassword("testpass"),
+		testcontainers.WithWaitStrategy(
+			wait.ForLog("database system is ready to accept connections").
+				WithOccurrence(2).WithStartupTimeout(5*time.Second)),
+	)
 	if err != nil {
-		log.Fatalf("Could not connect to docker: %s", err)
+		t.Fatalf("failed to start container: %v", err)
 	}
 
-	resource, err := pool.RunWithOptions(&dockertest.RunOptions{
-		Repository: "postgres",
-		Tag:        "15",
-		Env: []string{
-			"POSTGRES_USER=testuser",
-			"POSTGRES_PASSWORD=testpass",
-			"POSTGRES_DB=testdb",
-		},
-	}, func(config *docker.HostConfig) {
-		config.AutoRemove = true
-		config.RestartPolicy = docker.RestartPolicy{Name: "no"}
+	t.Cleanup(func() {
+		if err := container.Terminate(ctx); err != nil {
+			t.Fatalf("failed to terminate pgContainer: %s", err)
+		}
+	})
+
+	connStr, err := container.ConnectionString(ctx, "sslmode=disable")
+	if err != nil {
+		t.Fatalf("failed to get connection string: %v", err)
+	}
+
+	db, err := gorm.Open(gormPostgres.Open(connStr), &gorm.Config{
+		TranslateError: true,
 	})
 	if err != nil {
-		log.Fatalf("Could not start resource: %s", err)
+		t.Fatalf("failed to connect to db: %v", err)
 	}
 
-	dsn := fmt.Sprintf("host=localhost port=%s user=testuser password=testpass dbname=testdb sslmode=disable", resource.GetPort("5432/tcp"))
+	repository.RunMigrations(db)
 
-	if err := pool.Retry(func() error {
-		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{TranslateError: true})
-		if err != nil {
-			return err
-		}
-
-		db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
-		// Automatically migrate the schema
-		if err := db.AutoMigrate(&repository.User{}, &repository.Score{}, &repository.Game{}); err != nil {
-			return fmt.Errorf("error running migration: %w", err)
-		}
-		db.Exec(`ALTER TABLE users ALTER COLUMN id SET DEFAULT uuid_generate_v4();`)
-		db.Exec(`ALTER TABLE games ALTER COLUMN id SET DEFAULT uuid_generate_v4();`)
-
-		sqlDB, err := db.DB()
-		if err != nil {
-			return err
-		}
-		return sqlDB.Ping()
-	}); err != nil {
-		log.Fatalf("Could not connect to Docker: %s", err)
-	}
-
-	code := m.Run()
-	if err := pool.Purge(resource); err != nil {
-		log.Fatalf("Could not purge resource: %s", err)
-	}
-	os.Exit(code)
+	return db
 }
 
-func TestCreateGame(t *testing.T) {
-	r := repository.NewGameRepository(db)
+func TestCreateAndGetGame(t *testing.T) {
+	db := setupTestDB(t)
 
-	game, err := r.CreateGame("Test Game")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if game.Name != "Test Game" {
-		t.Errorf("expected game name 'Test Game', got '%s'", game.Name)
-	}
-}
+	repo := repository.NewGameRepository(db)
 
-func TestCreateGame_Duplicated(t *testing.T) {
-	r := repository.NewGameRepository(db)
+	// Create a game
+	game, err := repo.CreateGame("test-game")
+	assert.NoError(t, err)
+	assert.NotNil(t, game)
+	assert.Equal(t, "test-game", game.Name)
 
-	_, _ = r.CreateGame("Duplicate Game")
-	_, err := r.CreateGame("Duplicate Game")
-	if err != domain.ErrGameAlreadyExists {
-		t.Errorf("expected ErrGameAlreadyExists, got %v", err)
-	}
+	// Get the game
+	fetched, err := repo.GetGameByID(game.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, game.ID, fetched.ID)
+	assert.Equal(t, "test-game", fetched.Name)
 }

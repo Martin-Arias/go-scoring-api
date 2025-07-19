@@ -71,7 +71,7 @@ func setupRouter() *gin.Engine {
 func init() {
 	customRegistry.MustRegister(HttpRequestTotal, HttpRequestErrorTotal)
 	var err error
-	db, err = repository.ConnectAndMigrate()
+	db, err = repository.Connect()
 	if err != nil {
 		log.Fatal("DB connection/migration failed:", err)
 	}
