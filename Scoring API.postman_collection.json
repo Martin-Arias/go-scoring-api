@@ -185,7 +185,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"player_id\":4,\n    \"game_id\":1,\n    \"points\": 1\n}",
+							"raw": "{\n    \"user_id\":4,\n    \"game_id\":1,\n    \"points\": 1\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -224,7 +224,7 @@
 							"raw": ""
 						},
 						"url": {
-							"raw": "{{BASE_URL}}/api/scores/user?player_id=2",
+							"raw": "{{BASE_URL}}/api/scores/user?user_id=2",
 							"host": [
 								"{{BASE_URL}}"
 							],
@@ -235,7 +235,7 @@
 							],
 							"query": [
 								{
-									"key": "player_id",
+									"key": "user_id",
 									"value": "2"
 								}
 							]

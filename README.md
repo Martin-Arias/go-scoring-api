@@ -105,7 +105,7 @@ La documentación interactiva de los endpoints está disponible en:
 | Método | Endpoint                 | Requiere Token | Rol        | Descripción                                         |
 | ------ | ------------------------ | -------------- | ---------- | --------------------------------------------------- |
 | PUT    | `/api/scores`            | ✅ Sí          | 🛡️ Admin   | Registrar o actualizar puntaje de un usuario        |
-| GET    | `/api/scores/user`       | ✅ Sí          | Cualquiera | Ver scores por `player_id` (query param)            |
+| GET    | `/api/scores/user`       | ✅ Sí          | Cualquiera | Ver scores por `user_id` (query param)              |
 | GET    | `/api/scores/game`       | ✅ Sí          | Cualquiera | Ver scores por `game_id` (query param)              |
 | GET    | `/api/scores/game/stats` | ✅ Sí          | Cualquiera | Ver media, mediana y moda de puntuaciones por juego |
 

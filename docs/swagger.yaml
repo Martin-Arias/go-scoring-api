@@ -45,21 +45,21 @@ definitions:
       username:
         type: string
     required:
-    - password
-    - username
+      - password
+      - username
     type: object
   handler.SubmitScoreRequest:
     properties:
       game_id:
         type: integer
-      player_id:
+      user_id:
         type: integer
       points:
         type: integer
     required:
-    - game_id
-    - player_id
-    - points
+      - game_id
+      - user_id
+      - points
     type: object
 host: localhost:8080
 info:
@@ -78,70 +78,70 @@ paths:
     get:
       description: Retrieves all available games
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.GameDTO'
+              $ref: "#/definitions/dto.GameDTO"
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
       summary: List games
       tags:
-      - games
+        - games
     post:
       consumes:
-      - application/json
+        - application/json
       description: Adds a new game to the system
       parameters:
-      - description: Game name
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.GameDTO'
+        - description: Game name
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: "#/definitions/dto.GameDTO"
       produces:
-      - application/json
+        - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.GameDTO'
+            $ref: "#/definitions/dto.GameDTO"
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
       security:
-      - BearerAuth: []
+        - BearerAuth: []
       summary: Create a game
       tags:
-      - games
+        - games
   /api/scores:
     put:
       consumes:
-      - application/json
-      description: Submits or updates the score for a player in a specific game
+        - application/json
+      description: Submits or updates the score for a user in a specific game
       parameters:
-      - description: Score data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.SubmitScoreRequest'
+        - description: Score data
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: "#/definitions/handler.SubmitScoreRequest"
       produces:
-      - application/json
+        - application/json
       responses:
         "201":
           description: Created
@@ -152,141 +152,141 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
       security:
-      - BearerAuth: []
+        - BearerAuth: []
       summary: Submit a score
       tags:
-      - scores
+        - scores
   /api/scores/game:
     get:
-      description: Lists player scores for a specific game
+      description: Lists user scores for a specific game
       parameters:
-      - description: Game ID
-        in: query
-        name: game_id
-        required: true
-        type: integer
+        - description: Game ID
+          in: query
+          name: game_id
+          required: true
+          type: integer
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.PlayerScoreDTO'
+              $ref: "#/definitions/dto.PlayerScoreDTO"
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
       security:
-      - BearerAuth: []
+        - BearerAuth: []
       summary: Get scores by game
       tags:
-      - scores
+        - scores
   /api/scores/game/stats:
     get:
       description: Calculates mean, median, and mode for a game's scores
       parameters:
-      - description: Game ID
-        in: query
-        name: game_id
-        required: true
-        type: integer
+        - description: Game ID
+          in: query
+          name: game_id
+          required: true
+          type: integer
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ScoreStatisticsDTO'
+            $ref: "#/definitions/dto.ScoreStatisticsDTO"
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
       security:
-      - BearerAuth: []
+        - BearerAuth: []
       summary: Get game score statistics
       tags:
-      - scores
+        - scores
   /api/scores/user:
     get:
-      description: Lists game scores for a specific player
+      description: Lists game scores for a specific user
       parameters:
-      - description: Player ID
-        in: query
-        name: player_id
-        required: true
-        type: integer
+        - description: user ID
+          in: query
+          name: user_id
+          required: true
+          type: integer
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.PlayerScoreDTO'
+              $ref: "#/definitions/dto.PlayerScoreDTO"
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
       security:
-      - BearerAuth: []
-      summary: Get scores by player
+        - BearerAuth: []
+      summary: Get scores by user
       tags:
-      - scores
+        - scores
   /auth/login:
     post:
       consumes:
-      - application/json
+        - application/json
       description: Authenticates a user and returns a JWT token
       parameters:
-      - description: User credentials
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.AuthRequest'
+        - description: User credentials
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: "#/definitions/handler.AuthRequest"
       produces:
-      - application/json
+        - application/json
       responses:
         "200":
           description: OK
@@ -296,32 +296,32 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
       summary: Login user
       tags:
-      - auth
+        - auth
   /auth/register:
     post:
       consumes:
-      - application/json
+        - application/json
       description: Creates a user with a username and password
       parameters:
-      - description: User credentials
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/handler.AuthRequest'
+        - description: User credentials
+          in: body
+          name: request
+          required: true
+          schema:
+            $ref: "#/definitions/handler.AuthRequest"
       produces:
-      - application/json
+        - application/json
       responses:
         "201":
           description: Created
@@ -332,18 +332,18 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: "#/definitions/dto.ErrorResponse"
       summary: Register a new user
       tags:
-      - auth
+        - auth
 securityDefinitions:
   BearerAuth:
     in: header
