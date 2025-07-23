@@ -26,11 +26,12 @@ func NewScoreHandler(ss ports.ScoreService) *ScoreHandler {
 // @Tags scores
 // @Accept json
 // @Produce json
-// @Param request body SubmitScoreRequest true "Score data"
-// @Success 201 {object} map[string]string
-// @Failure 400 {object} map[string]interface{} "error: string"
-// @Failure 409 {object} map[string]interface{} "error: string"
-// @Failure 500 {object} map[string]interface{} "error: string"
+// @Param request body dto.SubmitScoreRequest true "Score data"
+// @Success 201 {object} map[string]string "Score submitted successfully"
+// @Failure 400 {object} map[string]string "Invalid request"
+// @Failure 404 {object} map[string]string "User or game not found"
+// @Failure 409 {object} map[string]string "Score not allowed"
+// @Failure 500 {object} map[string]string "Internal error"
 // @Security BearerAuth
 // @Router /api/scores [put]
 func (h *ScoreHandler) Submit(c *gin.Context) {
@@ -75,11 +76,11 @@ func (h *ScoreHandler) Submit(c *gin.Context) {
 // @Description Lists user scores for a specific game
 // @Tags scores
 // @Produce json
-// @Param game_id query int true "Game ID"
-// @Success 200 {array} dto.PlayerScoreDTO
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
+// @Param game_id query string true "Game ID"
+// @Success 200 {array} dto.ScoreResponse
+// @Failure 400 {object} map[string]string "Invalid game ID"
+// @Failure 404 {object} map[string]string "Game or scores not found"
+// @Failure 500 {object} map[string]string "Internal error"
 // @Security BearerAuth
 // @Router /api/scores/game [get]
 func (h *ScoreHandler) GetGameScores(c *gin.Context) {
@@ -122,15 +123,15 @@ func (h *ScoreHandler) GetGameScores(c *gin.Context) {
 
 // GetUserScores returns all scores for a specific User.
 //
-// @Summary Get scores by User
-// @Description Lists game scores for a specific User
+// @Summary Get scores by user
+// @Description Lists game scores for a specific user
 // @Tags scores
 // @Produce json
-// @Param user_id query int true "User ID"
-// @Success 200 {array} dto.PlayerScoreDTO
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
+// @Param user_id query string true "User ID"
+// @Success 200 {array} dto.ScoreResponse
+// @Failure 400 {object} map[string]string "Invalid user ID"
+// @Failure 404 {object} map[string]string "User not found"
+// @Failure 500 {object} map[string]string "Internal error"
 // @Security BearerAuth
 // @Router /api/scores/user [get]
 func (h *ScoreHandler) GetUserScores(c *gin.Context) {
@@ -173,11 +174,11 @@ func (h *ScoreHandler) GetUserScores(c *gin.Context) {
 // @Description Calculates mean, median, and mode for a game's scores
 // @Tags scores
 // @Produce json
-// @Param game_id query int true "Game ID"
+// @Param game_id query string true "Game ID"
 // @Success 200 {object} dto.ScoreStatisticsDTO
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
+// @Failure 400 {object} map[string]string "Invalid game ID"
+// @Failure 404 {object} map[string]string "No scores found"
+// @Failure 500 {object} map[string]string "Internal error"
 // @Security BearerAuth
 // @Router /api/scores/game/stats [get]
 func (h *ScoreHandler) GetGameStats(c *gin.Context) {
@@ -192,7 +193,7 @@ func (h *ScoreHandler) GetGameStats(c *gin.Context) {
 	if err != nil {
 		log.Warn().Err(err).Msg("game stats could not be retrieved")
 		if errors.Is(err, domain.ErrScoreNotFound) {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": domain.ErrScoreNotFound.Error()})
+			c.JSON(http.StatusNotFound, gin.H{"error": domain.ErrScoreNotFound.Error()})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed retrieving game stats"})

@@ -26,11 +26,11 @@ func NewUserHandler(us ports.UserService) *UserHandler {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param request body AuthRequest true "User credentials"
-// @Success 201 {object} map[string]string
-// @Failure 400 {object} map[string]interface{} "error: string"
-// @Failure 409 {object} map[string]interface{} "error: string"
-// @Failure 500 {object} map[string]interface{} "error: string"
+// @Param request body dto.AuthRequest true "User credentials"
+// @Success 201 {object} dto.RegisterResponse "User registered successfully"
+// @Failure 400 {object} map[string]interface{} "error: Invalid request"
+// @Failure 409 {object} map[string]interface{} "error: Username already exists"
+// @Failure 500 {object} map[string]interface{} "error: Internal error"
 // @Router /auth/register [post]
 func (uh *UserHandler) Register(c *gin.Context) {
 	var req dto.AuthRequest
@@ -65,11 +65,11 @@ func (uh *UserHandler) Register(c *gin.Context) {
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param request body AuthRequest true "User credentials"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{} "error: string"
-// @Failure 409 {object} map[string]interface{} "error: string"
-// @Failure 500 {object} map[string]interface{} "error: string"
+// @Param request body dto.AuthRequest true "User credentials"
+// @Success 200 {object} dto.LoginResponse
+// @Failure 400 {object} map[string]interface{} "error: Invalid request"
+// @Failure 404 {object} map[string]interface{} "error: User not found"
+// @Failure 500 {object} map[string]interface{} "error: Internal error"
 // @Router /auth/login [post]
 func (uh *UserHandler) Login(c *gin.Context) {
 	var req dto.AuthRequest
@@ -87,7 +87,7 @@ func (uh *UserHandler) Login(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": domain.ErrAuthInvalid.Error()})
 			return
 		}
-		c.JSON(http.StatusBadRequest, gin.H{"error": "internal server error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 		return
 	}
 

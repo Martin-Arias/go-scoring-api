@@ -21,16 +21,16 @@ func NewGameHandler(gs ports.GameService) *GameHandler {
 
 // Create creates a new game.
 //
-// @Summary Create a game
-// @Description Adds a new game to the system
+// @Summary Create a new game
+// @Description Adds a new game to the system with a unique name.
 // @Tags games
 // @Accept json
 // @Produce json
-// @Param request body dto.GameDTO true "Game name"
-// @Success 201 {object} dto.GameDTO
-// @Failure 400 {object} map[string]interface{} "error: string"
-// @Failure 409 {object} map[string]interface{} "error: string"
-// @Failure 500 {object} map[string]interface{} "error: string"
+// @Param request body dto.CreateRequest true "Game to create"
+// @Success 201 {object} dto.GameResponse "Game created successfully"
+// @Failure 400 {object} map[string]string "Invalid input"
+// @Failure 409 {object} map[string]string "Game already exists"
+// @Failure 500 {object} map[string]string "Internal server error"
 // @Security BearerAuth
 // @Router /api/games [post]
 func (h *GameHandler) Create(c *gin.Context) {
@@ -63,12 +63,12 @@ func (h *GameHandler) Create(c *gin.Context) {
 
 // List returns all games.
 //
-// @Summary List games
-// @Description Retrieves all available games
+// @Summary Get list of games
+// @Description Retrieves all games available in the system.
 // @Tags games
 // @Produce json
-// @Success 200 {array} dto.GameDTO
-// @Failure 500 {object} map[string]interface{} "error: string"
+// @Success 200 {array} dto.GameResponse "List of games"
+// @Failure 500 {object} map[string]string "Internal server error"
 // @Router /api/games [get]
 func (h *GameHandler) List(c *gin.Context) {
 	games, err := h.gs.GetGames()
