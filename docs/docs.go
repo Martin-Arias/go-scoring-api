@@ -25,28 +25,31 @@ const docTemplate = `{
     "paths": {
         "/api/games": {
             "get": {
-                "description": "Retrieves all available games",
+                "description": "Retrieves all games available in the system.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "games"
                 ],
-                "summary": "List games",
+                "summary": "Get list of games",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "List of games",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.GameDTO"
+                                "$ref": "#/definitions/dto.GameResponse"
                             }
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -57,7 +60,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Adds a new game to the system",
+                "description": "Adds a new game to the system with a unique name.",
                 "consumes": [
                     "application/json"
                 ],
@@ -67,41 +70,50 @@ const docTemplate = `{
                 "tags": [
                     "games"
                 ],
-                "summary": "Create a game",
+                "summary": "Create a new game",
                 "parameters": [
                     {
-                        "description": "Game name",
+                        "description": "Game to create",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GameDTO"
+                            "$ref": "#/definitions/dto.CreateRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Game created successfully",
                         "schema": {
-                            "$ref": "#/definitions/dto.GameDTO"
+                            "$ref": "#/definitions/dto.GameResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid input",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "409": {
-                        "description": "Conflict",
+                        "description": "Game already exists",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -132,13 +144,13 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.SubmitScoreRequest"
+                            "$ref": "#/definitions/dto.SubmitScoreRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Score submitted successfully",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -147,27 +159,39 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User or game not found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "409": {
-                        "description": "Conflict",
+                        "description": "Score not allowed",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -190,7 +214,7 @@ const docTemplate = `{
                 "summary": "Get scores by game",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Game ID",
                         "name": "game_id",
                         "in": "query",
@@ -203,26 +227,35 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PlayerScoreDTO"
+                                "$ref": "#/definitions/dto.ScoreResponse"
                             }
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid game ID",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Game or scores not found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -245,7 +278,7 @@ const docTemplate = `{
                 "summary": "Get game score statistics",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Game ID",
                         "name": "game_id",
                         "in": "query",
@@ -256,25 +289,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.ScoreStatisticsDTO"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid game ID",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "No scores found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -297,8 +342,8 @@ const docTemplate = `{
                 "summary": "Get scores by user",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "user ID",
+                        "type": "string",
+                        "description": "User ID",
                         "name": "user_id",
                         "in": "query",
                         "required": true
@@ -310,26 +355,35 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PlayerScoreDTO"
+                                "$ref": "#/definitions/dto.ScoreResponse"
                             }
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Invalid user ID",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "User not found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "Internal error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -355,7 +409,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.AuthRequest"
+                            "$ref": "#/definitions/dto.AuthRequest"
                         }
                     }
                 ],
@@ -363,26 +417,28 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
+                            "$ref": "#/definitions/dto.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "error: Invalid request",
+                        "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "404": {
+                        "description": "error: User not found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "error: Internal error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -408,36 +464,36 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/handler.AuthRequest"
+                            "$ref": "#/definitions/dto.AuthRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "User registered successfully",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "$ref": "#/definitions/dto.RegisterResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "error: Invalid request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "409": {
-                        "description": "Conflict",
+                        "description": "error: Username already exists",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
-                        "description": "Internal Server Error",
+                        "description": "error: Internal error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -445,64 +501,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string",
-                    "example": "invalid request"
-                }
-            }
-        },
-        "dto.GameDTO": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.PlayerScoreDTO": {
-            "type": "object",
-            "properties": {
-                "game_name": {
-                    "type": "string"
-                },
-                "points": {
-                    "type": "integer"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.ScoreStatisticsDTO": {
-            "type": "object",
-            "properties": {
-                "game_id": {
-                    "type": "integer"
-                },
-                "game_name": {
-                    "type": "string"
-                },
-                "mean": {
-                    "type": "number"
-                },
-                "median": {
-                    "type": "number"
-                },
-                "mode": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "handler.AuthRequest": {
+        "dto.AuthRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -518,22 +517,84 @@ const docTemplate = `{
                 }
             }
         },
-        "handler.SubmitScoreRequest": {
+        "dto.CreateRequest": {
             "type": "object",
             "required": [
-                "game_id",
-                "user_id",
-                "points"
+                "name"
             ],
             "properties": {
-                "game_id": {
-                    "type": "integer"
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.GameResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
                 },
-                "user_id": {
-                    "type": "integer"
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ScoreResponse": {
+            "type": "object",
+            "properties": {
+                "game_id": {
+                    "type": "string"
+                },
+                "game_name": {
+                    "type": "string"
                 },
                 "points": {
                     "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SubmitScoreRequest": {
+            "type": "object",
+            "required": [
+                "game_id",
+                "points",
+                "user_id"
+            ],
+            "properties": {
+                "game_id": {
+                    "type": "string"
+                },
+                "points": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         }
@@ -549,7 +610,7 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
+	Version:          "2.0",
 	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
