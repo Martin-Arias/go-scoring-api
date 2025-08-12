@@ -1,43 +1,6 @@
 basePath: /
 definitions:
-  dto.ErrorResponse:
-    properties:
-      error:
-        example: invalid request
-        type: string
-    type: object
-  dto.GameDTO:
-    properties:
-      id:
-        type: integer
-      name:
-        type: string
-    type: object
-  dto.PlayerScoreDTO:
-    properties:
-      game_name:
-        type: string
-      points:
-        type: integer
-      username:
-        type: string
-    type: object
-  dto.ScoreStatisticsDTO:
-    properties:
-      game_id:
-        type: integer
-      game_name:
-        type: string
-      mean:
-        type: number
-      median:
-        type: number
-      mode:
-        items:
-          type: integer
-        type: array
-    type: object
-  handler.AuthRequest:
+  dto.AuthRequest:
     properties:
       password:
         minLength: 6
@@ -48,18 +11,58 @@ definitions:
     - password
     - username
     type: object
-  handler.SubmitScoreRequest:
+  dto.CreateRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  dto.GameResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.LoginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  dto.RegisterResponse:
+    properties:
+      id:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.ScoreResponse:
     properties:
       game_id:
-        type: integer
-      player_id:
-        type: integer
+        type: string
+      game_name:
+        type: string
       points:
         type: integer
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.SubmitScoreRequest:
+    properties:
+      game_id:
+        type: string
+      points:
+        minimum: 0
+        type: integer
+      user_id:
+        type: string
     required:
     - game_id
-    - player_id
     - points
+    - user_id
     type: object
 host: localhost:8080
 info:
@@ -72,99 +75,115 @@ info:
     url: https://opensource.org/licenses/MIT
   termsOfService: http://example.com/terms/
   title: Scoring API
-  version: "1.0"
+  version: "2.0"
 paths:
   /api/games:
     get:
-      description: Retrieves all available games
+      description: Retrieves all games available in the system.
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: List of games
           schema:
             items:
-              $ref: '#/definitions/dto.GameDTO'
+              $ref: '#/definitions/dto.GameResponse'
             type: array
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: List games
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get list of games
       tags:
       - games
     post:
       consumes:
       - application/json
-      description: Adds a new game to the system
+      description: Adds a new game to the system with a unique name.
       parameters:
-      - description: Game name
+      - description: Game to create
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GameDTO'
+          $ref: '#/definitions/dto.CreateRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Game created successfully
           schema:
-            $ref: '#/definitions/dto.GameDTO'
+            $ref: '#/definitions/dto.GameResponse'
         "400":
-          description: Bad Request
+          description: Invalid input
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
         "409":
-          description: Conflict
+          description: Game already exists
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
         "500":
-          description: Internal Server Error
+          description: Internal server error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
       security:
       - BearerAuth: []
-      summary: Create a game
+      summary: Create a new game
       tags:
       - games
   /api/scores:
     put:
       consumes:
       - application/json
-      description: Submits or updates the score for a player in a specific game
+      description: Submits or updates the score for a user in a specific game
       parameters:
       - description: Score data
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.SubmitScoreRequest'
+          $ref: '#/definitions/dto.SubmitScoreRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Score submitted successfully
           schema:
             additionalProperties:
               type: string
             type: object
         "400":
-          description: Bad Request
+          description: Invalid request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
         "404":
-          description: Not Found
+          description: User or game not found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
         "409":
-          description: Conflict
+          description: Score not allowed
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
         "500":
-          description: Internal Server Error
+          description: Internal error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
       security:
       - BearerAuth: []
       summary: Submit a score
@@ -172,13 +191,13 @@ paths:
       - scores
   /api/scores/game:
     get:
-      description: Lists player scores for a specific game
+      description: Lists user scores for a specific game
       parameters:
       - description: Game ID
         in: query
         name: game_id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -186,20 +205,26 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.PlayerScoreDTO'
+              $ref: '#/definitions/dto.ScoreResponse'
             type: array
         "400":
-          description: Bad Request
+          description: Invalid game ID
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
         "404":
-          description: Not Found
+          description: Game or scores not found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
         "500":
-          description: Internal Server Error
+          description: Internal error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
       security:
       - BearerAuth: []
       summary: Get scores by game
@@ -213,26 +238,34 @@ paths:
         in: query
         name: game_id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ScoreStatisticsDTO'
+            additionalProperties:
+              type: string
+            type: object
         "400":
-          description: Bad Request
+          description: Invalid game ID
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
         "404":
-          description: Not Found
+          description: No scores found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
         "500":
-          description: Internal Server Error
+          description: Internal error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
       security:
       - BearerAuth: []
       summary: Get game score statistics
@@ -240,13 +273,13 @@ paths:
       - scores
   /api/scores/user:
     get:
-      description: Lists game scores for a specific player
+      description: Lists game scores for a specific user
       parameters:
-      - description: Player ID
+      - description: User ID
         in: query
-        name: player_id
+        name: user_id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -254,23 +287,29 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.PlayerScoreDTO'
+              $ref: '#/definitions/dto.ScoreResponse'
             type: array
         "400":
-          description: Bad Request
+          description: Invalid user ID
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
         "404":
-          description: Not Found
+          description: User not found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
         "500":
-          description: Internal Server Error
+          description: Internal error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties:
+              type: string
+            type: object
       security:
       - BearerAuth: []
-      summary: Get scores by player
+      summary: Get scores by user
       tags:
       - scores
   /auth/login:
@@ -284,27 +323,29 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.AuthRequest'
+          $ref: '#/definitions/dto.AuthRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
+            $ref: '#/definitions/dto.LoginResponse'
+        "400":
+          description: 'error: Invalid request'
+          schema:
             additionalProperties: true
             type: object
-        "400":
-          description: Bad Request
+        "404":
+          description: 'error: User not found'
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
-          description: Internal Server Error
+          description: 'error: Internal error'
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties: true
+            type: object
       summary: Login user
       tags:
       - auth
@@ -319,28 +360,29 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/handler.AuthRequest'
+          $ref: '#/definitions/dto.AuthRequest'
       produces:
       - application/json
       responses:
         "201":
-          description: Created
+          description: User registered successfully
           schema:
-            additionalProperties:
-              type: string
-            type: object
+            $ref: '#/definitions/dto.RegisterResponse'
         "400":
-          description: Bad Request
+          description: 'error: Invalid request'
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties: true
+            type: object
         "409":
-          description: Conflict
+          description: 'error: Username already exists'
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties: true
+            type: object
         "500":
-          description: Internal Server Error
+          description: 'error: Internal error'
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            additionalProperties: true
+            type: object
       summary: Register a new user
       tags:
       - auth

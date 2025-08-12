@@ -1,6 +1,6 @@
 APP_NAME=go-scoring-api
 COVERAGE_FILE=coverage.out
-FILE_PATHS=./internal/handler... ./internal/middleware... ./internal/utils...
+FILE_PATHS=./internal/...
 test:
 	@echo "🧪 Ejecutando tests..."
 	go test ./... -v

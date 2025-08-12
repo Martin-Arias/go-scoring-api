@@ -4,10 +4,11 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/Martin-Arias/go-scoring-api/cmd/api/handlers"
 	_ "github.com/Martin-Arias/go-scoring-api/docs"
-	"github.com/Martin-Arias/go-scoring-api/internal/handler"
 	"github.com/Martin-Arias/go-scoring-api/internal/middleware"
-	"github.com/Martin-Arias/go-scoring-api/internal/repository"
+	repository "github.com/Martin-Arias/go-scoring-api/internal/repository/postgres"
+	"github.com/Martin-Arias/go-scoring-api/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -36,18 +37,22 @@ func setupRouter() *gin.Engine {
 	ur := repository.NewUserRepository(db)
 	gr := repository.NewGameRepository(db)
 
+	us := services.NewUserService(ur)
+	ss := services.NewScoreService(sr, ur, gr)
+	gs := services.NewGameService(gr)
+
 	r := gin.Default()
 	r.GET("/metrics", PrometheusHandler())
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.Use(RequestMetricsMiddleware())
 
-	authHandler := handler.NewAuthHandler(ur)
-	gameHandler := handler.NewGameHandler(gr)
-	scoreHandler := handler.NewScoreHandler(sr, ur, gr)
+	userHandler := handlers.NewUserHandler(us)
+	gameHandler := handlers.NewGameHandler(gs)
+	scoreHandler := handlers.NewScoreHandler(ss)
 	// Public routes
 	auth := r.Group("/auth")
-	auth.POST("/register", authHandler.Register)
-	auth.POST("/login", authHandler.Login)
+	auth.POST("/register", userHandler.Register)
+	auth.POST("/login", userHandler.Login)
 
 	// Protected routes
 	api := r.Group("/api")
@@ -57,23 +62,23 @@ func setupRouter() *gin.Engine {
 	api.GET("/games", gameHandler.List)
 
 	api.PUT("/scores", middleware.AdminMiddleware(), scoreHandler.Submit)
-	api.GET("/scores/user", scoreHandler.GetScoresByPlayerID)
-	api.GET("/scores/game", scoreHandler.GetScoresByGameID)
-	api.GET("/scores/game/stats", scoreHandler.GetStatisticsByGameID)
+	api.GET("/scores/user", scoreHandler.GetUserScores)
+	api.GET("/scores/game", scoreHandler.GetGameScores)
+	api.GET("/scores/game/stats", scoreHandler.GetGameStats)
 
 	return r
 }
 func init() {
 	customRegistry.MustRegister(HttpRequestTotal, HttpRequestErrorTotal)
 	var err error
-	db, err = repository.ConnectAndMigrate()
+	db, err = repository.Connect()
 	if err != nil {
 		log.Fatal("DB connection/migration failed:", err)
 	}
 }
 
 // @title           Scoring API
-// @version         1.0
+// @version         2.0
 // @description     API for managing players, games and scores
 // @termsOfService  http://example.com/terms/
 
